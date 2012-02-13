@@ -389,8 +389,8 @@ def do_compare_results():
     job = Job(settings)
 
     ##Step 3: Compare.
-    job.HandleCompCtrlGds()
-    job.HandleCompTestGds()
+    job.HandleCompOrigGds()
+    job.HandleCompNormGds()
 
     job.CommitDb()
     
