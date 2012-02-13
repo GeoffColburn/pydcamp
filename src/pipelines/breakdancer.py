@@ -7,6 +7,7 @@ import pickle as p
 import breseq.command
 import extern.bwa as bwa
 import extern.samtools as samtools
+import extern.picardtools as picardtools
 import libdcamp.common as common
 
 class Pipeline:
@@ -162,7 +163,7 @@ class Pipeline:
     def SortBams(self, bam_paths, output_dir = "02_reference_alignment"):
         sorted_bam_paths = list()
         for bam_path in bam_paths:
-            bam_sorted_prefix = os.path.join(os.path.join(self._output_dir, output_dir), "sorted_{}".format(get_base_name(bam_path)))
+            bam_sorted_prefix = os.path.join(os.path.join(self._output_dir, output_dir), "sorted_{}".format(common.get_base_name(bam_path)))
             bam_sorted_path = "{}.bam".format(bam_sorted_prefix)
             
             sorted_bam_paths.append(bam_sorted_path)
@@ -226,10 +227,10 @@ def main():
         bam_paths = pipeline.ConvertSamToBam(sam_paths)
         
         #Step: Picardtools: Add read groups.
-        read_group_sam_paths = pipeline.AddReadGroups(sam_paths)
+        #read_group_sam_paths = pipeline.AddReadGroups(sam_paths)
         
         #Step: Samtools: Sort BAM(s)
-        sorted_bam_paths = pipeline.SortBams(read_group_sam_paths)
+        sorted_bam_paths = pipeline.SortBams(bam_paths)
         
         #Step: Samtools: Merge sorted BAMs, return bam file if there is only one.
         sorted_bam_path = pipeline.HandleMultipleBams(sorted_bam_paths)
