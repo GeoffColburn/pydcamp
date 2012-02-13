@@ -16,6 +16,7 @@ class Job:
         FAILED = "FAILED"
         COMPLETED = "COMPLETED"
         NO_CONTROL = "NO_CONTROL"
+        NO_REFERENCE_FILE = "NO_REFERENCE_FILE"
     
     class VcfOption:
         NONE   = ""
@@ -195,16 +196,28 @@ class Job:
                 gd = GenomeDiff(orig_ctrl_gd)
                 tokens = gd.header_info().ref_seqs
                 ref_seq_paths = list()
+                status = Job.Status.COMPLETED
                 for token in tokens:
-                    file_name = os.path.basename(token)
-                    ref_seq_paths.append(os.path.join(self.settings.downloads, file_name))
+                    kvp = token.split(":")
+                    file_name = os.path.basename(kvp[1])
+                    if not file_name.endswith(".gbk"):
+                        file_name = "{}.gbk".format(file_name)
+                    file_path = os.path.join(self.settings.downloads, file_name)
+                    if not os.path.exists(file_path):
+                        status = Job.Status.NO_REFERENCE_FILE
+                        break
+                    ref_seq_paths.append(file_path)
+                if status == Job.Status.NO_REFERENCE_FILE:
+                    print "NO_REFERENCE_FILE for {} {}".format(pipeline, run_name)
+                    #self.cur.execute("update {} set status = ?".format(pipeline), [status])
+                    break
                 assert ref_seq_paths
 
                 new_path = self.settings.results_norm_ctrl_gd_fmt.format(pipeline, run_name)
                 if not os.path.exists(new_path):
                     breseq.command.normalize_gd(orig_ctrl_gd, ref_seq_paths, new_path)
-                self.cur.execute("update {} set norm_ctrl_gd = ?"\
-                        .format(pipeline), [new_path])
+                self.cur.execute("update {} set norm_ctrl_gd = ? where run_name = ?"\
+                        .format(pipeline), [new_path, run_name])
                 
 
 #Step 2.X
@@ -223,9 +236,20 @@ class Job:
                 gd = GenomeDiff(orig_ctrl_gd)
                 tokens = gd.header_info().ref_seqs
                 ref_seq_paths = list()
+                status = Job.Status.COMPLETED
                 for token in tokens:
-                    file_name = os.path.basename(token)
-                    ref_seq_paths.append(os.path.join(self.settings.downloads, file_name))
+                    kvp = token.split(":")
+                    file_name = os.path.basename(kvp[1])
+                    if not file_name.endswith(".gbk"):
+                        file_name = "{}.gbk".format(file_name)
+                    file_path = os.path.join(self.settings.downloads, file_name)
+                    if not os.path.exists(file_path):
+                        status = Job.Status.NO_REFERENCE_FILE
+                    ref_seq_paths.append(file_path)
+                if status == Job.Status.NO_REFERENCE_FILE:
+                    print "NO_REFERENCE_FILE for {} {}".format(pipeline, run_name)
+                    #self.cur.execute("update {} set status = ?".format(pipeline), [status])
+                    break
                 assert ref_seq_paths
 
                 test_path = self.settings.results_norm_test_gd_fmt.format(pipeline, run_name)
@@ -393,14 +417,56 @@ def do_compare_results():
     job.HandleCompNormGds()
 
     job.CommitDb()
+
+def do_process_results(command):
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--data",      dest = "data",      default = "01_Data")
+    parser.add_argument("--downloads", dest = "downloads", default = "02_Downloads")
+    parser.add_argument("--output",    dest = "output",    default = "03_Output")
+    parser.add_argument("--logs",      dest = "logs",      default = "04_Logs")
+    parser.add_argument("--results",   dest = "results",   default = "05_Results")
+    args = parser.parse_args()
+
+    settings = Settings(args.data, args.downloads, args.output, args.logs, args.results)
+    settings.CreateResultsDir()
+    job = Job(settings)
+
+    if command == "convert-results" or command == "process_results":
+        job.HandleLogs()
+        job.HandleBreseqOrigTestGds()
+        job.HandleTestVcfs()
+        job.HandleOrigCtrlGds()
+        job.HandleConvertVcfsToGds(Job.VcfOption.NONE)          
+        job.HandleConvertVcfsToGds(Job.VcfOption.AF_099)    
+        job.HandleConvertVcfsToGds(Job.VcfOption.AF_100)            
+
+    if command == "normalize-results" or command == "process_results":
+        job.HandleNormCtrlGds()
+        job.HandleNormTestGds()
+
+    if command == "compare-results" or command == "process_results":
+        job.HandleCompOrigGds()
+        job.HandleCompNormGds()
+
+
+
+    job.CommitDb()
+
+    do_gather_results()
+    do_normalize_results()
+    do_compare_results()
+
     
 
 def main():
     command = sys.argv.pop(1).lower()
 
-    if command == "gather-results": do_gather_results()
-    if command == "normalize-results": do_normalize_results()
-    if command == "compare-results": do_compare_results()
+    if command == "convert-results" or\
+       command == "normalize-results" or\
+       command == "compare-results" or\
+       command == "process-results":
+        do_process_results(command)
+
 
     
     #html_factory = HtmlFactory(settings)
