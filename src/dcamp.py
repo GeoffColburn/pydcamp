@@ -281,9 +281,9 @@ class Job:
             for run_name, norm_test_gd, norm_test_af_099_gd, norm_test_af_100_gd,\
                     norm_ctrl_gd in self.cur.fetchall():
 
-                test_path = self.settings.results_comp_orig_test_gd_fmt.format(pipeline, run_name)
-                test_af_099_path = self.settings.results_comp_orig_test_af_099_gd_fmt.format(pipeline, run_name)
-                test_af_100_path = self.settings.results_comp_orig_test_af_100_gd_fmt.format(pipeline, run_name)
+                test_path = self.settings.results_comp_norm_test_gd_fmt.format(pipeline, run_name)
+                test_af_099_path = self.settings.results_comp_norm_test_af_099_gd_fmt.format(pipeline, run_name)
+                test_af_100_path = self.settings.results_comp_norm_test_af_100_gd_fmt.format(pipeline, run_name)
 
                 if not os.path.exists(test_path):
                     breseq.command.compare_gd(norm_ctrl_gd, norm_test_gd, test_path)
