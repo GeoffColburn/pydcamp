@@ -59,7 +59,7 @@ class Settings:
         self.results_dcamp_prediction_pth = os.path.join(self.results_dcamp, "prediction.html")
 
 
-    def CreateResultsDir(self):
+    def create_results_dir(self):
         #Pipeline directories
         for path in glob.glob(os.path.join(self.output, '*/*')):
             new_path = path.replace(self.output, self.results)
