@@ -6,6 +6,7 @@ import shutil
 import argparse
 
 import breseq.command
+import extern.samtools as samtools
 from libdcamp.settings import Settings
 from breseq.genome_diff import GenomeDiff
 from libdcamp.html_factory import HtmlFactory
@@ -348,7 +349,7 @@ class Job:
                 
 def do_results(args):
     settings = Settings(args.data, args.downloads, args.output, args.logs, args.results)
-    settings.CreateResultsDir()
+    settings.create_results_dir()
     job = Job(settings)
     job.setup_paths_database()
 
@@ -376,6 +377,30 @@ def do_results(args):
 def do_create_alignment(args):
     pipelines.common.create_alignment(args)
 
+def do_samtools(args):
+    fasta_path, sorted_bam_path = pipelines.common.create_alignment(args)
+
+    step_3_dir = os.path.join(args.output_dir, "output")
+    step_3_file = os.path.join(step_3_dir, "output.done")
+    vcf_path = os.path.join(step_3_dir, "{}.vcf".format(pipeline.run_name()))
+    gd_path = vcf_path.replace(".vcf", ".gd")
+    if not os.path.exists(step_3_file):
+        print "++Step 3 mutation predictions and output started."
+        if not os.path.exists(step_3_dir):
+            os.makedirs(step_3_dir)
+            
+        #Step: Samtools: Mutation prediction.
+        if not os.path.exists(vcf_path):
+            samtools.mpileup(fasta_path, sorted_bam_path, vcf_path)
+        assert os.path.exists(vcf_path)
+        
+        #Step: Breseq: Convert VCF file to Genome Diff format.
+        if not os.path.exists(gd_path):
+            breseq.command.vcf2gd(vcf_path, gd_path)
+        assert os.path.exists(gd_path)
+
+
+
 
 def main():
     main_parser = argparse.ArgumentParser()
@@ -385,6 +410,7 @@ def main():
     create_alignment_parser = subparser.add_parser("create-alignment")
     create_alignment_parser.add_argument("-o", dest = "output_dir")
     create_alignment_parser.add_argument("-r", action = "append", dest = "ref_paths")
+    create_alignment_parser.add_argument("--pair-ended", action = "store_true", dest = "pair_ended", default = False)
     create_alignment_parser.add_argument("read_paths", nargs = '+')
     create_alignment_parser.set_defaults(func = do_create_alignment)
 
@@ -397,6 +423,14 @@ def main():
     results_parser.add_argument("--results",   dest = "results",   default = "05_Results")
     results_parser.add_argument("--action",    dest = "action",    default = "process", choices = ["convert", "normalize", "compare", "process"])
     results_parser.set_defaults(func = do_results)
+
+    #Samtools pipeline.
+    samtools_parser = subparser.add_parser("samtools")
+    samtools_parser.add_argument("-o", dest = "output_dir")
+    samtools_parser.add_argument("-r", action = "append", dest = "ref_paths")
+    samtools_parser.add_argument("--pair-ended", action = "store_true", dest = "pair_ended", default = False)
+    samtools_parser.add_argument("read_paths", nargs = '+')
+    samtools_parser.set_defaults(func = do_samtools)
 
     args = main_parser.parse_args()
     args.func(args)
