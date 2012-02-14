@@ -16,7 +16,7 @@ class Pipeline:
         self._output_dir = output_dir
         self._run_name   = common.get_base_name(output_dir)
         
-    def ConvertGenbanks(self, ref_paths, output_dir = "01_reference_conversion"):
+    def convert_genbanks(self, ref_paths, output_dir = "01_reference_conversion"):
         fasta_paths = list()
         for ref_path in ref_paths:
             gbk_path = ref_path
@@ -34,7 +34,7 @@ class Pipeline:
         assert len(fasta_paths)
         return fasta_paths
     
-    def MergeFastas(self, fasta_paths, output_dir = "01_reference_conversion"):
+    def merge_fastas(self, fasta_paths, output_dir = "01_reference_conversion"):
         fasta_path = ""
         if len(fasta_paths) > 1:
             fasta_path = os.path.join(os.path.join(self._output_dir, output_dir), "merged.fasta")
@@ -46,7 +46,7 @@ class Pipeline:
         assert os.path.exists(fasta_path)
         return fasta_path
     
-    def BwaIndex(self, fasta_path, output_dir = "01_reference_conversion"):
+    def bwa_index(self, fasta_path, output_dir = "01_reference_conversion"):
         index_done_file_name = "index_{}.done".format(common.get_base_name(fasta_path))
         index_done_file_path = os.path.join(os.path.join(self._output_dir, output_dir), index_done_file_name)
         if not os.path.exists(index_done_file_path):
@@ -55,7 +55,7 @@ class Pipeline:
         assert os.path.exists(index_done_file_path)
         return fasta_path
             
-    def BwaAln(self, fasta_path, read_paths, output_dir = "02_reference_alignment"):
+    def bwa_aln(self, fasta_path, read_paths, output_dir = "02_reference_alignment"):
         sam_args = list()
         for fastq_path in read_paths:
             sai_name= "{}_{}.sai".format(common.get_base_name(fasta_path), common.get_base_name(fastq_path))
@@ -69,7 +69,7 @@ class Pipeline:
         assert len(sam_args)
         return sam_args
     
-    def BwaSamse(self, sam_args, output_dir = "02_reference_alignment"):
+    def bwa_samse(self, sam_args, output_dir = "02_reference_alignment"):
         sam_paths=list()
         for args in sam_args:
             fasta_path, fastq_path, sai_path = args
@@ -82,7 +82,7 @@ class Pipeline:
         assert len(sam_paths)
         return sam_paths
     
-    def AddReadGroups(self, aln_paths, output_dir = "02_reference_alignment"):
+    def add_read_groups(self, aln_paths, output_dir = "02_reference_alignment"):
         rg_aln_paths = list()
         for aln_path in aln_paths:
             rg_aln_name = "RG_{}.sam".format(get_base_name(aln_path))
@@ -95,7 +95,7 @@ class Pipeline:
         assert len(rg_aln_paths)
         return rg_aln_paths
     
-    def ConvertSamToBam(self, sam_paths, output_dir = "02_reference_alignment"):
+    def convert_sam_to_bam(self, sam_paths, output_dir = "02_reference_alignment"):
         bam_paths=list()
         #bam_done_file_path = os.path.join(step_2_dir, "bam.done")
         for sam_path in sam_paths:
@@ -108,7 +108,7 @@ class Pipeline:
         assert len(bam_paths)
         return bam_paths
     
-    def SortBams(self, bam_paths, output_dir = "02_reference_alignment"):
+    def sort_bams(self, bam_paths, output_dir = "02_reference_alignment"):
         sorted_bam_paths = list()
         for bam_path in bam_paths:
             bam_sorted_prefix = os.path.join(os.path.join(self._output_dir, output_dir), "sorted_{}".format(common.get_base_name(bam_path)))
@@ -121,20 +121,20 @@ class Pipeline:
         assert len(sorted_bam_paths)
         return sorted_bam_paths
     
-    def HandleMultipleBams(self, bam_paths, output_dir = "02_reference_alignment"):
+    def handle_multiple_bams(self, sam_paths, bam_paths, output_dir = "02_reference_alignment"):
         bam_path = ""
         if len(bam_paths) > 1:
-            bam_path=os.path.join(step_2_dir, "merged.bam")
+            bam_path=os.path.join(os.path.join(self._output_dir, output_dir), "merged.bam")
             
             if not os.path.exists(bam_path):
-                samtools.merge(sorted_bam_path, bam_paths)
+                samtools.merge(sam_paths, bam_path, bam_paths)
         else:
             bam_path = bam_paths[0]
         
         assert os.path.exists(bam_path)
         return bam_path
     
-    def AddReadGroups(self, aln_paths, output_dir = "02_reference_alignment"):
+    def add_read_groups(self, aln_paths, output_dir = "02_reference_alignment"):
         rg_aln_paths = list()
         for aln_path in aln_paths:
             rg_aln_name = "RG_{}.sam".format(common.get_base_name(aln_path))
@@ -147,7 +147,7 @@ class Pipeline:
         assert len(rg_aln_paths)
         return rg_aln_paths
 
-    def ConvertSamToBam(self, sam_paths, output_dir = "02_reference_alignment"):
+    def convert_sam_to_bam(self, sam_paths, output_dir = "02_reference_alignment"):
         bam_paths=list()
         #bam_done_file_path = os.path.join(step_2_dir, "bam.done")
         for sam_path in sam_paths:
@@ -160,7 +160,7 @@ class Pipeline:
         assert len(bam_paths)
         return bam_paths
     
-    def SortBams(self, bam_paths, output_dir = "02_reference_alignment"):
+    def sort_bams(self, bam_paths, output_dir = "02_reference_alignment"):
         sorted_bam_paths = list()
         for bam_path in bam_paths:
             bam_sorted_prefix = os.path.join(os.path.join(self._output_dir, output_dir), "sorted_{}".format(common.get_base_name(bam_path)))
@@ -192,13 +192,13 @@ def main():
         if not os.path.exists(step_1_dir): os.makedirs(step_1_dir)
         
         #Step: Convert Genbank files to Fasta files.
-        fasta_paths = pipeline.ConvertGenbanks(args.ref_paths)
+        fasta_paths = pipeline.convert_genbanks(args.ref_paths)
         
         #Step: Merge fasta files if there is more than one return single fasta path if not.
-        fasta_path = pipeline.MergeFastas(fasta_paths)
+        fasta_path = pipeline.merge_fastas(fasta_paths)
         
         #Step: Index the fasta file.
-        fasta_path = pipeline.BwaIndex(fasta_path)
+        fasta_path = pipeline.bwa_index(fasta_path)
         
         #Step: Mark step as completed.
         p.dump(fasta_path, open(step_1_done_file, 'w'))
@@ -218,22 +218,22 @@ def main():
         if not os.path.exists(step_2_dir): os.makedirs(step_2_dir)
         
         #Step: BWA: SAI(s)
-        sam_args = pipeline.BwaAln(fasta_path, args.read_paths)
+        sam_args = pipeline.bwa_aln(fasta_path, args.read_paths)
                 
         #Step: BWA: SAM(s)
-        sam_paths = pipeline.BwaSamse(sam_args)
-        
-        #Step: Samtools: BAM(s)
-        bam_paths = pipeline.ConvertSamToBam(sam_paths)
+        sam_paths = pipeline.bwa_samse(sam_args)
         
         #Step: Picardtools: Add read groups.
-        #read_group_sam_paths = pipeline.AddReadGroups(sam_paths)
+        read_group_sam_paths = pipeline.add_read_groups(sam_paths)
+
+        #Step: Samtools: BAM(s)
+        bam_paths = pipeline.convert_sam_to_bam(read_group_sam_paths)
         
         #Step: Samtools: Sort BAM(s)
-        sorted_bam_paths = pipeline.SortBams(bam_paths)
+        sorted_bam_paths = pipeline.sort_bams(bam_paths)
         
         #Step: Samtools: Merge sorted BAMs, return bam file if there is only one.
-        sorted_bam_path = pipeline.HandleMultipleBams(sorted_bam_paths)
+        sorted_bam_path = pipeline.handle_multiple_bams(read_group_sam_paths, sorted_bam_paths)
         
         #Step: Mark step as completed.
         p.dump(sorted_bam_path, open(step_2_done_file, 'w'))
