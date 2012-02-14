@@ -182,9 +182,8 @@ def sort_bams(bam_paths, output_dir):
     assert len(sorted_bam_paths)
     return sorted_bam_paths
 
-def create_alignment(args):
-    #Step 1 reference conversion
-    step_1_dir  = os.path.join(args.output_dir, "01_reference_conversion")
+def prepare_reference(args, output_dir):
+    step_1_dir  = os.path.join(args.output_dir, output_dir)
     step_1_done_file = os.path.join(step_1_dir, "reference_conversion.done")
     fasta_path = ""
     if not os.path.exists(step_1_done_file):
@@ -209,8 +208,11 @@ def create_alignment(args):
                 
     assert os.path.exists(fasta_path) and fasta_path.endswith(".fasta")
     
-    #Step 2 reference alignment 
-    step_2_dir = os.path.join(args.output_dir, "02_reference_alignment")
+    return fasta_path
+
+
+def create_alignment(args, fasta_path, output_dir):
+    step_2_dir = os.path.join(args.output_dir, output_dir)
     step_2_done_file = os.path.join(step_2_dir, "reference_alignment.done")
     sorted_bam_path = ""
     if not os.path.exists(step_2_done_file):
@@ -256,6 +258,6 @@ def create_alignment(args):
         sorted_bam_path = p.load(open(step_2_done_file, 'r'))
     assert os.path.exists(sorted_bam_path) and sorted_bam_path.endswith(".bam")
     
-    return (fasta_path, sorted_bam_path)
+    return sorted_bam_path
 
 

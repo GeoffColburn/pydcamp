@@ -41,15 +41,18 @@ def do_results(args):
     job.commit_db()
 
 def do_create_alignment(args):
-    pipelines.common.create_alignment(args)
+    fasta_path = pipelines.common.prepare_reference(args, "01_reference_conversion")
+    sorted_bam_path = pipelines.common.create_alignment(args, fasta_path, "02_reference_alignment")
 
 def do_samtools(args):
-    fasta_path, sorted_bam_path = pipelines.common.create_alignment(args)
+    fasta_path = pipelines.common.prepare_reference(args, "01_reference_conversion")
+    sorted_bam_path = pipelines.common.create_alignment(args, fasta_path, "02_reference_alignment")
 
     step_3_dir = os.path.join(args.output_dir, "output")
     step_3_file = os.path.join(step_3_dir, "output.done")
-    vcf_path = os.path.join(step_3_dir, "{}.vcf".format(pipeline.run_name()))
-    gd_path = vcf_path.replace(".vcf", ".gd")
+
+    vcf_path = os.path.join(step_3_dir, "output.vcf")
+    gd_path = os.path.join(step_3_dir, "output.gd")
     if not os.path.exists(step_3_file):
         print "++Step 3 mutation predictions and output started."
         if not os.path.exists(step_3_dir):
@@ -65,20 +68,47 @@ def do_samtools(args):
             breseq.command.vcf2gd(vcf_path, gd_path)
         assert os.path.exists(gd_path)
 
+def do_breakdancer(args): 
+    fasta_path = pipelines.common.prepare_reference(args, "01_All")
+    sorted_bam_path = pipelines.common.create_alignment(args, fasta_path, "01_All")
 
+    step_3_dir = os.path.join(args.output_dir, "01_All")
+    step_3_file = os.path.join(step_3_dir, "output.done")
 
+    if not os.path.exists(step_3_file):
+        print "++Step 3 mutation predictions and output started."
+        if not os.path.exists(step_3_dir):
+            os.makedirs(step_3_dir)
+
+        #shutil.copy2(sorted_bam_path, os.path.join(step_3_dir, os.path.basename(sorted_bam_path)))
+        #sorted_bam_path = os.path.join(step_3_dir, os.path.basename(sorted_bam_path))
+            
+        #Breakdancer::bam2cfg.pl
+        cfg_path = os.path.join(step_3_dir, "output.cfg")
+        ##if not os.path.exists(cfg_path):
+        #cwd = os.getcwd()
+        #os.chdir(step_3_dir)
+        cmd = "bam2cfg.pl -h -g {} > {}".format(sorted_bam_path, cfg_path)
+        #cmd = "bam2cfg.pl -h -g {} > {}".format(os.path.basename(sorted_bam_path), os.path.basename(cfg_path))
+        print cmd
+        os.system(cmd)
+        #os.chdir(cwd)
+        #assert os.path.exists(cfg_path)
+
+        ctx_path = os.path.join(step_3_dir, "output.ctx")
+        ##if not os.path.exists(ctx_path):
+        #cwd = os.getcwd()
+        #os.chdir(step_3_dir)
+        cmd = "breakdancer_max {} > {}".format(cfg_path, ctx_path)
+        #cmd = "breakdancer_max {} > {}".format(os.path.basename(cfg_path), os.path.basename(ctx_path))
+        print cmd
+        os.system(cmd)
+        #os.chdir(cwd)
+        #assert os.path.exists(ctx_path)
 
 def main():
     main_parser = argparse.ArgumentParser()
     subparser = main_parser.add_subparsers()
-
-    #Create alignment.
-    create_alignment_parser = subparser.add_parser("create-alignment")
-    create_alignment_parser.add_argument("-o", dest = "output_dir")
-    create_alignment_parser.add_argument("-r", action = "append", dest = "ref_paths")
-    create_alignment_parser.add_argument("--pair-ended", action = "store_true", dest = "pair_ended", default = False)
-    create_alignment_parser.add_argument("read_paths", nargs = '+')
-    create_alignment_parser.set_defaults(func = do_create_alignment)
 
     #Handle results.
     results_parser = subparser.add_parser("results")
@@ -90,6 +120,14 @@ def main():
     results_parser.add_argument("--action",    dest = "action",    default = "process", choices = ["convert", "normalize", "compare", "process"])
     results_parser.set_defaults(func = do_results)
 
+    #Create alignment.
+    create_alignment_parser = subparser.add_parser("create-alignment")
+    create_alignment_parser.add_argument("-o", dest = "output_dir")
+    create_alignment_parser.add_argument("-r", action = "append", dest = "ref_paths")
+    create_alignment_parser.add_argument("--pair-ended", action = "store_true", dest = "pair_ended", default = False)
+    create_alignment_parser.add_argument("read_paths", nargs = '+')
+    create_alignment_parser.set_defaults(func = do_create_alignment)
+
     #Samtools pipeline.
     samtools_parser = subparser.add_parser("samtools")
     samtools_parser.add_argument("-o", dest = "output_dir")
@@ -97,6 +135,15 @@ def main():
     samtools_parser.add_argument("--pair-ended", action = "store_true", dest = "pair_ended", default = False)
     samtools_parser.add_argument("read_paths", nargs = '+')
     samtools_parser.set_defaults(func = do_samtools)
+
+    #Breakdancer pipeline.
+    breakdancer_parser = subparser.add_parser("breakdancer")
+    breakdancer_parser.add_argument("-o", dest = "output_dir")
+    breakdancer_parser.add_argument("-r", action = "append", dest = "ref_paths")
+    breakdancer_parser.add_argument("--pair-ended", action = "store_true", dest = "pair_ended", default = True)
+    breakdancer_parser.add_argument("--sort_bam", action = "store_true", dest = "sort_bam", default = False)
+    breakdancer_parser.add_argument("read_paths", nargs = '+')
+    breakdancer_parser.set_defaults(func = do_breakdancer)
 
     args = main_parser.parse_args()
     args.func(args)
