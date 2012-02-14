@@ -58,7 +58,7 @@ class Job:
 
                     log text)""".format(pipeline))
 
-    def RunHasCompleted(self, pipeline, run_name):
+    def run_has_completed(self, pipeline, run_name):
         if pipeline.lower() == "breseq":
             return os.path.exists(self.settings.output_gd_fmt.format(pipeline, run_name, "output"))
         else:
@@ -66,7 +66,7 @@ class Job:
                    os.path.exists(self.settings.output_vcf_fmt.format(pipeline, run_name, run_name))
 
 #Paths database methods.
-    def SetupPathsDataBase(self):
+    def setup_paths_database(self):
         paths = glob.glob(os.path.join(self.settings.output, "*/*"))
         for path in paths:
             tokens = path.split('/')
@@ -74,33 +74,33 @@ class Job:
             run_name = tokens.pop(1)
             self.cur.execute("insert or replace into {} (run_name) values(?)".format(pipeline), [run_name])
 
-    def TablesInDb(self):
+    def tables_in_db(self):
         ret_val = list()
         for table in self.cur.execute("select name from sqlite_master where type='table'"):
             ret_val.append(table[0])
         return ret_val
 
-    def RunNamesInDbTable(self, table):
+    def run_names_in_db_table(self, table):
         ret_val = list()
         for run_name in self.cur.execute("select run_name from {}".format(table)):
             ret_val.append(run_name[0])
         return ret_val
     
-    def CommitDb(self):
+    def commit_db(self):
         self.con.commit()
 
 
 #File handling methods.
 #Step 1
-    def HandleBreseqOrigTestGds(self, verbose = True): 
+    def handle_breseq_orig_test_gds(self, verbose = True): 
         """Your starting point for the breseq pipeline... This needs to run first to determined
         which runs have been COMPLETED; determined by if there exists a finale genome diff file."""
-        for pipeline in self.TablesInDb():
+        for pipeline in self.tables_in_db():
             if pipeline.lower() != "breseq": continue
             self.cur.execute("select run_name from {}".format(pipeline))
             for run_name, in self.cur.fetchall():
                 status = Job.Status.FAILED
-                if self.RunHasCompleted(pipeline, run_name):
+                if self.run_has_completed(pipeline, run_name):
                     status = Job.Status.COMPLETED
                     old_path = self.settings.output_gd_fmt.format(pipeline, run_name, "output")
                     new_path = self.settings.results_orig_test_gd_fmt.format(pipeline, run_name)
@@ -115,11 +115,11 @@ class Job:
                 self.cur.execute("update {} set status = ? where run_name = ?"\
                         .format(pipeline), (status, run_name))
 #Step 1.1
-    def HandleTestVcfs(self):
+    def handle_test_vcfs(self):
         """Your starting point for the pipelines that output a vcf file(gatk and samtools)... 
         This needs to run first to determined which runs have been COMPLETED; determined by if
         there exists a finale vcf file."""
-        for pipeline in self.TablesInDb():
+        for pipeline in self.tables_in_db():
             if pipeline.lower() == "breseq": continue
             self.cur.execute("select run_name from {}".format(pipeline))
             for run_name, in self.cur.fetchall():
@@ -135,14 +135,14 @@ class Job:
                     self.cur.execute("update {} set status = ? where run_name = ?"\
                             .format(pipeline), [status, run_name])
 #Step 1.2
-    def HandleConvertVcfsToGds(self, vcf_option):
+    def handle_convert_vcfs_to_gds(self, vcf_option):
         """Convert all vcf files into genome diff files, it looks in the results directory for the vcf 
         file so HandleTestVcfs() needs to run first. Currently we allow for 3 options:
             1) Allow all entries.
             2) Allow only entries with an AF or AF1 value of 1.00. 
             3) Allow only entries with an AF or AF1 values less than 1.00. 
             """
-        for pipeline in self.TablesInDb():
+        for pipeline in self.tables_in_db():
             self.cur.execute("select run_name, orig_test_vcf from {} where status = ?"\
                     .format(pipeline), [Job.Status.COMPLETED])
             for run_name, orig_test_vcf in self.cur.fetchall():
@@ -165,12 +165,12 @@ class Job:
                 self.cur.execute("update {} set {} = ? where run_name = ?"\
                         .format(pipeline, key), [new_path, run_name])
 #Step 1.3
-    def HandleOrigCtrlGds(self):
+    def handle_orig_ctrl_gds(self):
         """ Run the HandleTest methods first to determine which control genome diffs we need to
         evaluate, then set status = NO_CONTROL if there is no control genome_diff in
         the self.settings.data directory. Then moves and renames the control genome diffs
         to the appropriate results directory."""
-        for pipeline in self.TablesInDb():
+        for pipeline in self.tables_in_db():
             self.cur.execute("select run_name, status from {}".format(pipeline))
             for run_name, status in self.cur.fetchall():
                 if status != Job.Status.COMPLETED: continue
@@ -186,10 +186,10 @@ class Job:
 
 #File normalizing methods.
 #Step 2.X
-    def HandleNormCtrlGds(self):
+    def handle_norm_ctrl_gds(self):
         """Normalize the control genome diff file, get the reference sequences from it's header 
         info and then look in the self.settings.downloads directory for it."""
-        for pipeline in self.TablesInDb():
+        for pipeline in self.tables_in_db():
             self.cur.execute("select run_name, orig_ctrl_gd from {} where status = ?"\
                     .format(pipeline), [Job.Status.COMPLETED])
             for run_name, orig_ctrl_gd in self.cur.fetchall():
@@ -222,12 +222,12 @@ class Job:
                 
 
 #Step 2.X
-    def HandleNormTestGds(self):
+    def handle_norm_test_gds(self):
         """Normalize orig_test_gd, orig_test_af_099_gd and orig_test_af_100_gd, we'll also need to 
         grab the orig_ctrl_gd for it's header information to determine what reference sequence files
         the genome diffs need to be normalized to and then look in the self.settings.downloads 
         directory for that file."""
-        for pipeline in self.TablesInDb():
+        for pipeline in self.tables_in_db():
             self.cur.execute("select run_name, orig_test_gd, orig_test_af_099_gd, orig_test_af_100_gd,\
                     orig_ctrl_gd from {} where status = ?"\
                     .format(pipeline), [Job.Status.COMPLETED])
@@ -272,8 +272,8 @@ class Job:
 
 #File compare methods.
 #Step 3
-    def HandleCompOrigGds(self):
-        for pipeline in self.TablesInDb():
+    def handle_comp_orig_gds(self):
+        for pipeline in self.tables_in_db():
             self.cur.execute("select run_name, orig_test_gd, orig_test_af_099_gd, orig_test_af_100_gd,\
                     orig_ctrl_gd from {} where status = ?"\
                     .format(pipeline), [Job.Status.COMPLETED])
@@ -298,8 +298,8 @@ class Job:
                         .format(pipeline), [test_path, test_af_099_path, test_af_100_path, run_name])
 
 #Step 3
-    def HandleCompNormGds(self):
-        for pipeline in self.TablesInDb():
+    def handle_comp_norm_gds(self):
+        for pipeline in self.tables_in_db():
             self.cur.execute("select run_name, norm_test_gd, norm_test_af_099_gd, norm_test_af_100_gd,\
                     norm_ctrl_gd from {} where status = ?"\
                     .format(pipeline), [Job.Status.COMPLETED])
@@ -324,8 +324,8 @@ class Job:
                         .format(pipeline), [test_path, test_af_099_path, test_af_100_path, run_name])
 
 
-    def HandleLogs(self, verbose = True):
-        for pipeline in self.TablesInDb():
+    def handle_logs(self, verbose = True):
+        for pipeline in self.tables_in_db():
             self.cur.execute("select run_name, status from {}".format(pipeline))
             for run_name, status in self.cur.fetchall():
                 old_path = self.settings.logs_log_fmt.format(pipeline, run_name)
@@ -340,44 +340,38 @@ class Job:
                     shutil.copy2(old_path, new_path)
                 self.cur.execute("update {} set log = ? where run_name = ?".format(pipeline), (new_path, run_name))
 
-    def TestDB(self): 
-#        for table in self.TablesInDb():
-#            for run_name, in self.cur.execute("select run_name from {} where status = ?"\
-#                    .format(table), [Job.Status.FAILED]):
-#                print run_name
-
-       for table in self.TablesInDb():
+    def test_db(self): 
+       for table in self.tables_in_db():
             for row in self.cur.execute("select * from {}".format(table)):
                 print row
 
-       #     #for run_name in self.RunNamesInDbTable("breseq"):
                 
 def do_results(args):
     settings = Settings(args.data, args.downloads, args.output, args.logs, args.results)
     settings.CreateResultsDir()
     job = Job(settings)
-    job.SetupPathsDataBase()
+    job.setup_paths_database()
 
     if args.action == "convert" or args.action == "process":
-        job.HandleBreseqOrigTestGds()
-        job.HandleTestVcfs()
-        job.HandleOrigCtrlGds()
-        job.HandleConvertVcfsToGds(Job.VcfOption.NONE)          
-        job.HandleConvertVcfsToGds(Job.VcfOption.AF_099)    
-        job.HandleConvertVcfsToGds(Job.VcfOption.AF_100)            
-        job.HandleLogs()
+        job.handle_breseq_orig_test_gds()
+        job.handle_test_vcfs()
+        job.handle_orig_ctrl_gds()
+        job.handle_convert_vcfs_to_gds(Job.VcfOption.NONE)          
+        job.handle_convert_vcfs_to_gds(Job.VcfOption.AF_099)    
+        job.handle_convert_vcfs_to_gds(Job.VcfOption.AF_100)            
+        job.handle_logs()
 
     if args.action == "normalize" or args.action == "process":
-        job.HandleNormCtrlGds()
-        job.HandleNormTestGds()
+        job.handle_norm_ctrl_gds()
+        job.handle_norm_test_gds()
 
     if args.action == "compare" or args.action == "process":
-        job.HandleCompOrigGds()
-        job.HandleCompNormGds()
+        job.handle_comp_orig_gds()
+        job.handle_comp_norm_gds()
     
-    job.TestDB()
+    job.test_db()
 
-    job.CommitDb()
+    job.commit_db()
 
 def do_create_alignment(args):
     pipelines.common.create_alignment(args)
@@ -408,15 +402,6 @@ def main():
     args.func(args)
 
     
-
-
-    #command = sys.argv.pop(1).lower()
-
-    #if command == "convert-results" or\
-    #   command == "normalize-results" or\
-    #   command == "compare-results" or\
-    #   command == "process-results":
-    #    do_process_results(command)
 
 
     
