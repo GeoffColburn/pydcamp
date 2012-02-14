@@ -234,7 +234,16 @@ def create_alignment(args):
         bam_paths = convert_sam_to_bam(read_group_sam_paths, step_2_dir)
         
         #Step: Samtools: Sort BAM(s)
-        sorted_bam_paths = sort_bams(bam_paths, step_2_dir)
+        sorted_bam_paths = list()
+        try:
+            if args.sort_bam == True:
+                sorted_bam_paths = sort_bams(bam_paths, step_2_dir)
+            else:
+                sorted_bam_paths = bam_paths
+        except:
+            sorted_bam_paths = sort_bams(bam_paths, step_2_dir)
+
+        assert sorted_bam_paths
         
         #Step: Samtools: Merge sorted BAMs, return bam file if there is only one.
         sorted_bam_path = handle_multiple_bams(read_group_sam_paths, sorted_bam_paths, step_2_dir)
