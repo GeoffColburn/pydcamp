@@ -77,6 +77,21 @@ def bwa_samse(sam_args, output_dir):
     assert len(sam_paths)
     return sam_paths
 
+def bwa_sampe(sam_args, output_dir):
+    sai_paths = list()
+    fastq_paths = list()
+    sam_path = os.path.join(output_dir, "sampe.sam")
+    for args in sam_args:
+        fasta_path, fastq_path, sai_path = args
+        sai_paths.append(sai_path)
+        fastq_paths.append(fastq_path)
+    assert sai_paths
+    assert fastq_paths
+        
+    bwa.sampe(sam_path, fasta_path, sai_paths, fastq_paths)
+    return [sam_path]
+
+
 def add_read_groups(aln_paths, output_dir):
     rg_aln_paths = list()
     for aln_path in aln_paths:
@@ -206,7 +221,11 @@ def create_alignment(args):
         sam_args = bwa_aln(fasta_path, args.read_paths, step_2_dir)
                 
         #Step: BWA: SAM(s)
-        sam_paths = bwa_samse(sam_args, step_2_dir)
+        sam_paths = list()
+        if args.pair_ended == True:
+            sam_paths = bwa_sampe(sam_args, step_2_dir)
+        else:
+            sam_paths = bwa_samse(sam_args, step_2_dir)
         
         #Step: Picardtools: Add read groups.
         read_group_sam_paths = add_read_groups(sam_paths, step_2_dir)
@@ -228,6 +247,6 @@ def create_alignment(args):
         sorted_bam_path = p.load(open(step_2_done_file, 'r'))
     assert os.path.exists(sorted_bam_path) and sorted_bam_path.endswith(".bam")
     
-    return sorted_bam_path
+    return (fasta_path, sorted_bam_path)
 
 

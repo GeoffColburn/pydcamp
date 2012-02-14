@@ -19,3 +19,10 @@ def samse(sam_path, fasta_path, sai_path, fastq_path):
     print cmd
     assert not os.system(cmd), "Command: {}".format(cmd) 
     return sam_path
+
+def sampe(sam_path, fasta_path, sai_paths, fastq_paths):
+    #bwa samse *.fasta *.sai *.fastq > *.sam
+    cmd = "bwa sampe -f {} {} {} {}".format(sam_path, fasta_path, " ".join(sai_paths), " ".join(fastq_paths))
+    print cmd
+    assert not os.system(cmd), "Command: {}".format(cmd) 
+    return sam_path
