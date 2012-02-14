@@ -9,6 +9,7 @@ import breseq.command
 from libdcamp.settings import Settings
 from breseq.genome_diff import GenomeDiff
 from libdcamp.html_factory import HtmlFactory
+import pipelines.common
 
 
 class Job:
@@ -351,121 +352,71 @@ class Job:
 
        #     #for run_name in self.RunNamesInDbTable("breseq"):
                 
-def do_gather_results(): 
-    """Step 1 After a TACC job, moves, renames and converts files output from 
-    different pipelines and put them in the 'results' directory."""
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--data",      dest = "data",      default = "01_Data")
-    parser.add_argument("--downloads", dest = "downloads", default = "02_Downloads")
-    parser.add_argument("--output",    dest = "output",    default = "03_Output")
-    parser.add_argument("--logs",      dest = "logs",      default = "04_Logs")
-    parser.add_argument("--results",   dest = "results",   default = "05_Results")
-    args = parser.parse_args()
-
+def do_results(args):
     settings = Settings(args.data, args.downloads, args.output, args.logs, args.results)
     settings.CreateResultsDir()
     job = Job(settings)
     job.SetupPathsDataBase()
 
-    ##Step 1: Original.
-    job.HandleLogs()
-    job.HandleBreseqOrigTestGds()
-    job.HandleTestVcfs()
-    job.HandleOrigCtrlGds()
-    job.HandleConvertVcfsToGds(Job.VcfOption.NONE)          
-    job.HandleConvertVcfsToGds(Job.VcfOption.AF_099)    
-    job.HandleConvertVcfsToGds(Job.VcfOption.AF_100)            
-    job.CommitDb()
-
-
-def do_normalize_results():
-    """Step 2 After a TACC job, normalizes files in the results directory and parses the
-    'downloads' directory for sequence files to normalize with."""
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--data",      dest = "data",      default = "01_Data")
-    parser.add_argument("--downloads", dest = "downloads", default = "02_Downloads")
-    parser.add_argument("--output",    dest = "output",    default = "03_Output")
-    parser.add_argument("--logs",      dest = "logs",      default = "04_Logs")
-    parser.add_argument("--results",   dest = "results",   default = "05_Results")
-    args = parser.parse_args()
-
-    settings = Settings(args.data, args.downloads, args.output, args.logs, args.results)
-    settings.CreateResultsDir()
-    job = Job(settings)
-
-    #Step 2: Normalize.
-    job.HandleNormCtrlGds()
-    job.HandleNormTestGds()
-
-    job.CommitDb()
-
-def do_compare_results():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--data",      dest = "data",      default = "01_Data")
-    parser.add_argument("--downloads", dest = "downloads", default = "02_Downloads")
-    parser.add_argument("--output",    dest = "output",    default = "03_Output")
-    parser.add_argument("--logs",      dest = "logs",      default = "04_Logs")
-    parser.add_argument("--results",   dest = "results",   default = "05_Results")
-    args = parser.parse_args()
-
-    settings = Settings(args.data, args.downloads, args.output, args.logs, args.results)
-    settings.CreateResultsDir()
-    job = Job(settings)
-
-    ##Step 3: Compare.
-    job.HandleCompOrigGds()
-    job.HandleCompNormGds()
-
-    job.CommitDb()
-
-def do_process_results(command):
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--data",      dest = "data",      default = "01_Data")
-    parser.add_argument("--downloads", dest = "downloads", default = "02_Downloads")
-    parser.add_argument("--output",    dest = "output",    default = "03_Output")
-    parser.add_argument("--logs",      dest = "logs",      default = "04_Logs")
-    parser.add_argument("--results",   dest = "results",   default = "05_Results")
-    args = parser.parse_args()
-
-    settings = Settings(args.data, args.downloads, args.output, args.logs, args.results)
-    settings.CreateResultsDir()
-    job = Job(settings)
-
-    if command == "convert-results" or command == "process_results":
-        job.HandleLogs()
+    if args.action == "convert" or args.action == "process":
         job.HandleBreseqOrigTestGds()
         job.HandleTestVcfs()
         job.HandleOrigCtrlGds()
         job.HandleConvertVcfsToGds(Job.VcfOption.NONE)          
         job.HandleConvertVcfsToGds(Job.VcfOption.AF_099)    
         job.HandleConvertVcfsToGds(Job.VcfOption.AF_100)            
+        job.HandleLogs()
 
-    if command == "normalize-results" or command == "process_results":
+    if args.action == "normalize" or args.action == "process":
         job.HandleNormCtrlGds()
         job.HandleNormTestGds()
 
-    if command == "compare-results" or command == "process_results":
+    if args.action == "compare" or args.action == "process":
         job.HandleCompOrigGds()
         job.HandleCompNormGds()
-
-
+    
+    job.TestDB()
 
     job.CommitDb()
 
-    do_gather_results()
-    do_normalize_results()
-    do_compare_results()
+def do_create_alignment(args):
+    pipelines.common.create_alignment(args)
+
+
+def main():
+    main_parser = argparse.ArgumentParser()
+    subparser = main_parser.add_subparsers()
+
+    #Create alignment.
+    create_alignment_parser = subparser.add_parser("create-alignment")
+    create_alignment_parser.add_argument("-o", dest = "output_dir")
+    create_alignment_parser.add_argument("-r", action = "append", dest = "ref_paths")
+    create_alignment_parser.add_argument("read_paths", nargs = '+')
+    create_alignment_parser.set_defaults(func = do_create_alignment)
+
+    #Handle results.
+    results_parser = subparser.add_parser("results")
+    results_parser.add_argument("--data",      dest = "data",      default = "01_Data")
+    results_parser.add_argument("--downloads", dest = "downloads", default = "02_Downloads")
+    results_parser.add_argument("--output",    dest = "output",    default = "03_Output")
+    results_parser.add_argument("--logs",      dest = "logs",      default = "04_Logs")
+    results_parser.add_argument("--results",   dest = "results",   default = "05_Results")
+    results_parser.add_argument("--action",    dest = "action",    default = "process", choices = ["convert", "normalize", "compare", "process"])
+    results_parser.set_defaults(func = do_results)
+
+    args = main_parser.parse_args()
+    args.func(args)
 
     
 
-def main():
-    command = sys.argv.pop(1).lower()
 
-    if command == "convert-results" or\
-       command == "normalize-results" or\
-       command == "compare-results" or\
-       command == "process-results":
-        do_process_results(command)
+    #command = sys.argv.pop(1).lower()
+
+    #if command == "convert-results" or\
+    #   command == "normalize-results" or\
+    #   command == "compare-results" or\
+    #   command == "process-results":
+    #    do_process_results(command)
 
 
     
