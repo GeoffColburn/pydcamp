@@ -1,4 +1,4 @@
-#!/gsc/bin/perl
+#!/usr/bin/perl
 #Parse different alignment format and convert it to MAQ format
 
 use strict;
