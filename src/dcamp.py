@@ -120,8 +120,8 @@ def do_breakdancer(args):
 
 
 def do_gatk(args):
-    fasta_path = pipelines.common.prepare_reference(args, "01_All")
-    sorted_bam_path = pipelines.common.create_alignment(args, fasta_path, "01_All")
+    fasta_path = pipelines.common.prepare_reference(args, "01_reference_conversion")
+    sorted_bam_path = pipelines.common.create_alignment(args, fasta_path, "02_reference_alignment")
 #Gatk
 #Step 3
     step_3_dir = os.path.join(args.output_dir, "03_gatk")
