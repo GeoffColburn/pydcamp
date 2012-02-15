@@ -9,26 +9,28 @@ than is available in modules to build GATK.
 _GATK_DIR = "~/local/share/dcamp/gatk"
 _GENOME_ANALYSIS_TK = os.path.join(_GATK_DIR, "GenomeAnalysisTK.jar")
 
-def realigner_target_creator(ref_path, bam_path, output_intervals_path):
+def realigner_target_creator(ref_path, bam_path):
+    intervals_path = os.path.join(os.path.dirname(bam_path), "output.intervals")
     cmd = "java -Xmx1g -jar {} \
           -T RealignerTargetCreator \
           -R {} \
           -I {} \
-          -o {}".format(_GENOME_ANALYSIS_TK, ref_path, bam_path, output_intervals_path)
+          -o {}".format(_GENOME_ANALYSIS_TK, ref_path, bam_path, intervals_path)
     print cmd
     assert not os.system(cmd), "Command: {}".format(cmd)
-    return output_intervals_path
+    return intervals_path
 
-def indel_realigner(ref_path, bam_path, intervals_path, output_bam_path):
+def indel_realigner(ref_path, bam_path, intervals_path):
+    realigned_bam_path = os.path.join(os.path.dirname(bam_path), "realigned.bam")
     cmd = "java -Xmx1g -jar {} \
           -T IndelRealigner \
           -R {} \
           -I {} \
           -targetIntervals {} \
-          -o {}".format(_GENOME_ANALYSIS_TK, ref_path, bam_path, intervals_path, output_bam_path)
+          -o {}".format(_GENOME_ANALYSIS_TK, ref_path, bam_path, intervals_path, realigned_bam_path)
     print cmd
     assert not os.system(cmd), "Command: {}".format(cmd)
-    return output_bam_path
+    return realigned_bam_path
 
 def count_covariates(ref_path, bam_path):
     cmd = "java -Xmx1g -jar {} \

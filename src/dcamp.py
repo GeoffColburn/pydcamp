@@ -135,12 +135,10 @@ def do_gatk(args):
         sorted_bam_path = samtools.index(sorted_bam_path)
         
         #Step: Gatk: Intervals.
-        intervals_path = os.path.join(step_3_dir, "intervals.txt")
-        intervals_path = gatk.realigner_target_creator(fasta_path, sorted_bam_path, intervals_path)
+        intervals_path = gatk.realigner_target_creator(fasta_path, sorted_bam_path)
         
         #Step: Gatk: Indel Realigner.
-        realigned_bam_path = os.path.join(step_3_dir, "realigned.bam")
-        realigned_bam_path = gatk.indel_realigner(fasta_path, sorted_bam_path, intervals_path, realigned_bam_path)
+        realigned_bam_path = gatk.indel_realigner(fasta_path, sorted_bam_path, intervals_path)
         
         #Step: Picardtools: Validate alignment.
         pipelines.common.validate_alignment(realigned_bam_path)
