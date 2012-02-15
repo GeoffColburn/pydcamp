@@ -152,7 +152,7 @@ def add_read_groups(aln_paths, output_dir):
         rg_aln_paths.append(rg_aln_path)
         if os.path.exists(rg_aln_path): continue
         
-        picardtools.AddOrReplaceReadGroups(aln_path, rg_aln_path)
+        picardtools.add_or_replace_read_groups(aln_path, rg_aln_path)
     assert len(rg_aln_paths)
     return rg_aln_paths
 

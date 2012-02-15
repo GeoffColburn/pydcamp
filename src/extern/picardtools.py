@@ -1,28 +1,30 @@
 #!/usr/bin/env python
 import os
 
-def MarkDuplicates(bam_path):
+_PICARD_TOOLS_DIR = "~/local/share/dcamp/picard_tools/"
+_ADD_OR_REPLACE_READ_GROUPS = os.path.join(_PICARD_TOOLS_DIR, "AddOrReplaceReadGroups.jar")
+_MARK_DUPLICATES            = os.path.join(_PICARD_TOOLS_DIR, "MarkDuplicates.jar") 
+_VALIDATE_SAM_FILE          = os.path.join(_PICARD_TOOLS_DIR, "ValidateSamFile.jar") 
+
+def mark_duplicates(bam_path):
     output_dir = os.path.dirname(bam_path)
     output_path = os.path.join(output_dir, "MarkDuplicatesOutput")
     metric_path = os.path.join(output_dir, "MarkDuplicatesMetrics")
     
-    print "PicardTools::mark_duplicates({})".format(bam_path)
     cmd = "java -Xmx1g -jar {} \
           INPUT={} \
           OUTPUT={} \
           METRICS_FILE={}"\
-          .format("MarkDuplicates.jar", bam_path, output_path, metric_path)
+          .format(_MARK_DUPLICATES, bam_path, output_path, metric_path)
     assert not os.system(cmd), "Command: {}".format(cmd) 
     return bam_path
 
-def ValidateSamFile(aln_path):
-    print "PicardTools::validate_alignment({})".format(aln_path)
-    cmd = "java -jar {} I={}".format("ValidateSamFile.jar", aln_path)
+def validate_alignment(aln_path):
+    cmd = "java -jar {} I={}".format(_VALIDATE_SAM_FILE, aln_path)
     assert not os.system(cmd), "Command: {}".format(cmd) 
     return aln_path
     
-def AddOrReplaceReadGroups(input_path, output_path):
-    print "PicardTools::add_read_groups({}, {})".format(input_path, output_path)
-    cmd = "java -jar {} I={} O={} LB=FOO PL=ILLUMINA PU=BAR SM=NEE".format("AddOrReplaceReadGroups.jar", input_path, output_path)
+def add_or_replace_read_groups(input_path, output_path):
+    cmd = "java -jar {} I={} O={} LB=FOO PL=ILLUMINA PU=BAR SM=NEE".format(_ADD_OR_REPLACE_READ_GROUPS, input_path, output_path)
     assert not os.system(cmd), "Command: {}".format(cmd) 
     return output_path

@@ -6,30 +6,31 @@ NOTE(1/18/2012): On lonestar you need to get a newer version of apache-ant http:
 than is available in modules to build GATK.
 """
 
+_GATK_DIR = "~/local/share/dcamp/gatk"
+_GENOME_ANALYSIS_TK = os.path.join(_GATK_DIR, "GenomeAnalysisTK.jar")
 
 def realigner_target_creator(ref_path, bam_path, output_intervals_path):
-    print "Gatk::realigner_target_creator({}, {}, {})".format(ref_path, bam_path, output_intervals_path)
     cmd = "java -Xmx1g -jar {} \
           -T RealignerTargetCreator \
           -R {} \
           -I {} \
-          -o {}".format("GenomeAnalysisTK.jar", ref_path, bam_path, output_intervals_path)
+          -o {}".format(_GENOME_ANALYSIS_TK, ref_path, bam_path, output_intervals_path)
+    print cmd
     assert not os.system(cmd), "Command: {}".format(cmd)
     return output_intervals_path
 
-def indel_realigner(self, ref_path, bam_path, intervals_path, output_bam_path):
-    print "Gatk::indel_realigner({}, {}, {}, {})".format(ref_path, bam_path, intervals_path, output_bam_path)
+def indel_realigner(ref_path, bam_path, intervals_path, output_bam_path):
     cmd = "java -Xmx1g -jar {} \
           -T IndelRealigner \
           -R {} \
           -I {} \
           -targetIntervals {} \
-          -o {}".format("GenomeAnalysisTK.jar", ref_path, bam_path, intervals_path, output_bam_path)
+          -o {}".format(_GENOME_ANALYSIS_TK, ref_path, bam_path, intervals_path, output_bam_path)
+    print cmd
     assert not os.system(cmd), "Command: {}".format(cmd)
     return output_bam_path
 
-def count_covariates(self, ref_path, bam_path):
-    print "Gatk::count_covariates({}, {})".format(ref_path, bam_path)
+def count_covariates(ref_path, bam_path):
     cmd = "java -Xmx1g -jar {} \
           -T CountCovariates \
           -R {} \
@@ -42,18 +43,19 @@ def count_covariates(self, ref_path, bam_path):
           -recalFile recal_data.csv \
           --default_read_group 1 \
           --default_platform illumina"\
-          .format("GenomeAnalysisTK.jar", ref_path, bam_path)
+          .format(_GENOME_ANALYSIS_TK, ref_path, bam_path)
+    print cmd
     assert not os.system(cmd), "Command: {}".format(cmd)
 
-def unified_genotyper(self, ref_path, bam_path, output_vcf_path):
-    print "Gatk::unified_geno_typer({}, {}, {})".format(ref_path, bam_path, output_vcf_path)
+def unified_genotyper(ref_path, bam_path, output_vcf_path):
     cmd = "java -jar {} \
           -T UnifiedGenotyper \
           -R {} \
           -I {} \
           -o {} \
           -l INFO \
-          -glm BOTH".format("GenomeAnalysisTK.jar", ref_path, bam_path, output_vcf_path)
+          -glm BOTH".format(_GENOME_ANALYSIS_TK, ref_path, bam_path, output_vcf_path)
+    print cmd
     assert not os.system(cmd), "Command: {}".format(cmd)
     return output_vcf_path
 
