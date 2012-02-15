@@ -7,7 +7,7 @@ than is available in modules to build GATK.
 """
 
 
-def RealignerTargetCreator(ref_path, bam_path, output_intervals_path):
+def realigner_target_creator(ref_path, bam_path, output_intervals_path):
     print "Gatk::realigner_target_creator({}, {}, {})".format(ref_path, bam_path, output_intervals_path)
     cmd = "java -Xmx1g -jar {} \
           -T RealignerTargetCreator \
@@ -17,7 +17,7 @@ def RealignerTargetCreator(ref_path, bam_path, output_intervals_path):
     assert not os.system(cmd), "Command: {}".format(cmd)
     return output_intervals_path
 
-def IndelRealigner(self, ref_path, bam_path, intervals_path, output_bam_path):
+def indel_realigner(self, ref_path, bam_path, intervals_path, output_bam_path):
     print "Gatk::indel_realigner({}, {}, {}, {})".format(ref_path, bam_path, intervals_path, output_bam_path)
     cmd = "java -Xmx1g -jar {} \
           -T IndelRealigner \
@@ -28,7 +28,7 @@ def IndelRealigner(self, ref_path, bam_path, intervals_path, output_bam_path):
     assert not os.system(cmd), "Command: {}".format(cmd)
     return output_bam_path
 
-def CountCovariates(self, ref_path, bam_path):
+def count_covariates(self, ref_path, bam_path):
     print "Gatk::count_covariates({}, {})".format(ref_path, bam_path)
     cmd = "java -Xmx1g -jar {} \
           -T CountCovariates \
@@ -45,7 +45,7 @@ def CountCovariates(self, ref_path, bam_path):
           .format("GenomeAnalysisTK.jar", ref_path, bam_path)
     assert not os.system(cmd), "Command: {}".format(cmd)
 
-def UnifiedGenotyper(self, ref_path, bam_path, output_vcf_path):
+def unified_genotyper(self, ref_path, bam_path, output_vcf_path):
     print "Gatk::unified_geno_typer({}, {}, {})".format(ref_path, bam_path, output_vcf_path)
     cmd = "java -jar {} \
           -T UnifiedGenotyper \
