@@ -31,22 +31,22 @@ class Settings:
         #Results::Original
         self.results_orig_test_vcf_fmt = os.path.join(self.results, "{}/{}/orig_test.vcf")
         self.results_orig_test_gd_fmt = os.path.join(self.results, "{}/{}/orig_test.gd")
-        self.results_orig_test_af_other_gd_fmt = os.path.join(self.results, "{}/{}/orig_test_af_other.gd")
+        self.results_orig_test_af_099_gd_fmt = os.path.join(self.results, "{}/{}/orig_test_af_099.gd")
         self.results_orig_test_af_100_gd_fmt = os.path.join(self.results, "{}/{}/orig_test_af_100.gd")
         self.results_orig_ctrl_gd_fmt = os.path.join(self.results, "{}/{}/orig_ctrl.gd")
         self.results_log_fmt = os.path.join(self.results, "{}/{}/log.txt")
         self.results_error_log_fmt = os.path.join(self.results, "{}/{}/error_log.txt")
         #Results::Normalized
         self.results_norm_test_gd_fmt = os.path.join(self.results, "{}/{}/norm_test.gd")
-        self.results_norm_test_af_other_gd_fmt = os.path.join(self.results, "{}/{}/norm_test_af_other.gd")
+        self.results_norm_test_af_099_gd_fmt = os.path.join(self.results, "{}/{}/norm_test_af_099.gd")
         self.results_norm_test_af_100_gd_fmt = os.path.join(self.results, "{}/{}/norm_test_af_100.gd")
         self.results_norm_ctrl_gd_fmt = os.path.join(self.results, "{}/{}/norm_ctrl.gd")
         #Results::Compared
         self.results_comp_orig_test_gd_fmt = os.path.join(self.results, "{}/{}/comp_orig_test.gd")
-        self.results_comp_orig_test_af_other_gd_fmt = os.path.join(self.results, "{}/{}/comp_orig_test_af_other.gd")
+        self.results_comp_orig_test_af_099_gd_fmt = os.path.join(self.results, "{}/{}/comp_orig_test_af_099.gd")
         self.results_comp_orig_test_af_100_gd_fmt = os.path.join(self.results, "{}/{}/comp_orig_test_af_100.gd")
         self.results_comp_norm_test_gd_fmt = os.path.join(self.results, "{}/{}/comp_norm_test.gd")
-        self.results_comp_norm_test_af_other_gd_fmt = os.path.join(self.results, "{}/{}/comp_norm_test_af_other.gd")
+        self.results_comp_norm_test_af_099_gd_fmt = os.path.join(self.results, "{}/{}/comp_norm_test_af_099.gd")
         self.results_comp_norm_test_af_100_gd_fmt = os.path.join(self.results, "{}/{}/comp_norm_test_af_100.gd")
         #Results::Dcamp
         self.results_index_pth = os.path.join(self.results, "index.html")
