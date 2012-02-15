@@ -71,6 +71,7 @@ def do_samtools(args):
 def do_breakdancer(args): 
     fasta_path = pipelines.common.prepare_reference(args, "01_All")
     sorted_bam_path = pipelines.common.create_alignment(args, fasta_path, "01_All")
+    sorted_bam_file = os.path.basename(sorted_bam_path)
 
     step_3_dir = os.path.join(args.output_dir, "01_All")
     step_3_file = os.path.join(step_3_dir, "output.done")
@@ -84,26 +85,26 @@ def do_breakdancer(args):
         #sorted_bam_path = os.path.join(step_3_dir, os.path.basename(sorted_bam_path))
             
         #Breakdancer::bam2cfg.pl
-        cfg_path = os.path.join(step_3_dir, "output.cfg")
         ##if not os.path.exists(cfg_path):
-        #cwd = os.getcwd()
-        #os.chdir(step_3_dir)
-        cmd = "bam2cfg.pl -h -g {} > {}".format(sorted_bam_path, cfg_path)
+        cwd = os.getcwd()
+        os.chdir(step_3_dir)
+        cfg_file = "output.cfg"
+        cmd = "bam2cfg.pl -h -g {} > {}".format(sorted_bam_file, cfg_file)
         #cmd = "bam2cfg.pl -h -g {} > {}".format(os.path.basename(sorted_bam_path), os.path.basename(cfg_path))
         print cmd
         os.system(cmd)
         #os.chdir(cwd)
         #assert os.path.exists(cfg_path)
 
-        ctx_path = os.path.join(step_3_dir, "output.ctx")
+        ctx_file = "output.ctx"
         ##if not os.path.exists(ctx_path):
         #cwd = os.getcwd()
         #os.chdir(step_3_dir)
-        cmd = "breakdancer_max {} > {}".format(cfg_path, ctx_path)
+        cmd = "breakdancer_max {} > {}".format(cfg_file, ctx_file)
         #cmd = "breakdancer_max {} > {}".format(os.path.basename(cfg_path), os.path.basename(ctx_path))
         print cmd
         os.system(cmd)
-        #os.chdir(cwd)
+        os.chdir(cwd)
         #assert os.path.exists(ctx_path)
 
 def main():
@@ -141,7 +142,7 @@ def main():
     breakdancer_parser.add_argument("-o", dest = "output_dir")
     breakdancer_parser.add_argument("-r", action = "append", dest = "ref_paths")
     breakdancer_parser.add_argument("--pair-ended", action = "store_true", dest = "pair_ended", default = True)
-    breakdancer_parser.add_argument("--sort_bam", action = "store_true", dest = "sort_bam", default = False)
+    breakdancer_parser.add_argument("--sort_bam", action = "store_true", dest = "sort_bam", default = True)
     breakdancer_parser.add_argument("read_paths", nargs = '+')
     breakdancer_parser.set_defaults(func = do_breakdancer)
 

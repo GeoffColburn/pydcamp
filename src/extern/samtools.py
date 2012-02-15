@@ -14,7 +14,7 @@ def sort(bam_path, bam_sorted_prefix):
     return "{}.bam".format(bam_sorted_prefix)
     
 def merge(sam_paths, merged_bam_path, bam_paths):
-    cmd = "samtools merge -r -h {} {} {}"\
+    cmd = "samtools merge -r -n -h {} {} {}"\
             .format(" -h ".join(sam_paths), merged_bam_path, " ".join(bam_paths))
     print cmd
     assert not os.system(cmd), "Command: {}".format(cmd) 
