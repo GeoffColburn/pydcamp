@@ -14,6 +14,16 @@ if [ -z $(which breakdancer_max) ]; then
 else
   echo "Breakdancer already installed"
 fi
+#Breakdancer dependencies.
+#Statistics::Descriptive
+if [ ! -f "~/local/lib/perl5/Statistics/Descriptive.pm" ]; then
+  pushd extern/Statistics-Descriptive-2.6/
+  perl Makefile.PL INSTALL_BASE=~/local
+  make install
+  popd
+else
+  echo "Perl module Statistics::Descriptive already installed."
+fi
 
 
 ./setup.py install --user
