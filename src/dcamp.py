@@ -8,6 +8,7 @@ import argparse
 import breseq.command
 import extern.samtools as samtools
 import extern.gatk as gatk
+import extern.picardtools as picardtools
 import pipelines.common
 
 from libdcamp.settings import Settings
@@ -141,7 +142,7 @@ def do_gatk(args):
         realigned_bam_path = gatk.indel_realigner(fasta_path, sorted_bam_path, intervals_path)
         
         #Step: Picardtools: Validate alignment.
-        pipelines.common.validate_alignment(realigned_bam_path)
+        picardtools.validate_alignment(realigned_bam_path)
         
 #Gatk Output
 #Step 4
@@ -151,7 +152,7 @@ def do_gatk(args):
 
     if not os.path.exists(output_dir): os.makedirs(output_dir)
     
-    pipelines.common.unified_genotyper(fasta_path, realigned_bam_path, vcf_path)
+    gatk.unified_genotyper(fasta_path, realigned_bam_path, vcf_path)
     breseq.command.vcf2gd(vcf_path, gd_path)
 
 
