@@ -57,6 +57,7 @@ class Settings:
         self.results_dcamp_validation_pth = os.path.join(self.results_dcamp, "validation.html")
         self.results_dcamp_validation_pth = os.path.join(self.results_dcamp, "validation.html")
         self.results_dcamp_prediction_pth = os.path.join(self.results_dcamp, "prediction.html")
+        self.results_dcamp_genome_diff_compare_fmt = os.path.join(self.results_dcamp, "{}.html")
 
 
     def create_results_dir(self):

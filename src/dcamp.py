@@ -36,9 +36,12 @@ def do_results(args):
         job.handle_norm_ctrl_gds()
         job.handle_norm_test_gds()
 
-    if args.action == "compare" or args.action == "process":
+    if args.action == "compare-validate" or args.action == "process":
         job.handle_comp_orig_gds()
         job.handle_comp_norm_gds()
+
+    if args.action == "compare-gds" or args.action == "process":
+        job.compare_gds()
     
     job.commit_db()
 
@@ -167,7 +170,7 @@ def main():
     results_parser.add_argument("--output",    dest = "output",    default = "03_Output")
     results_parser.add_argument("--logs",      dest = "logs",      default = "04_Logs")
     results_parser.add_argument("--results",   dest = "results",   default = "05_Results")
-    results_parser.add_argument("--action",    dest = "action",    default = "process", choices = ["convert", "normalize", "compare", "process"])
+    results_parser.add_argument("--action",    dest = "action",    default = "process", choices = ["convert", "normalize", "compare-validat", "process", "compare-gds"])
     results_parser.set_defaults(func = do_results)
 
     #create-alignment.

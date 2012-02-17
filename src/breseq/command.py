@@ -25,3 +25,9 @@ def compare_gd(control_path, test_path, output_path):
     os.system(cmd)
     return output_path
 
+def genome_diff_compare(output_path, ref_paths, gd_paths):
+    cmd = "genomediff compare -o {} -r {} {}".format(output_path, " -r ".join(ref_paths), " ".join(gd_paths))
+    print cmd
+    os.system(cmd)
+    return output_path
+

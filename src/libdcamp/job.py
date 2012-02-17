@@ -56,6 +56,8 @@ class Job:
                     comp_norm_test_af_099_gd text,
                     comp_norm_test_af_100_gd text,
 
+                    genome_diff_comp_html text,
+
                     log text)""".format(pipeline))
 
     def run_has_completed(self, pipeline, run_name):
@@ -88,6 +90,18 @@ class Job:
     
     def commit_db(self):
         self.con.commit()
+        self.cur.close()
+
+    def completed_run_names_in_db(self):
+        ret_val = list()
+        for pipeline in self.tables_in_db():
+            self.cur.execute("select run_name from {} where status = ?"\
+                    .format(pipeline), [Job.Status.COMPLETED])
+            for run_name, in self.cur.fetchall():
+                if run_name not in ret_val:
+                    ret_val.append(run_name)
+        ret_val.sort()
+        return ret_val
 
 
 #File handling methods.
@@ -323,8 +337,7 @@ class Job:
                         comp_norm_test_af_100_gd = ? where run_name = ?"\
                         .format(pipeline), [test_path, test_af_099_path, test_af_100_path, run_name])
 
-
-    def handle_logs(self, verbose = True):
+    def handle_logs(self):
         for pipeline in self.tables_in_db():
             self.cur.execute("select run_name, status from {}".format(pipeline))
             for run_name, status in self.cur.fetchall():
@@ -340,9 +353,36 @@ class Job:
                     shutil.copy2(old_path, new_path)
                 self.cur.execute("update {} set log = ? where run_name = ?".format(pipeline), (new_path, run_name))
 
+    def compare_gds(self, key = "comp_norm_test_gd"):
+        run_names = self.completed_run_names_in_db()
+        for run_name in run_names:
+            gd_paths = list()
+            for pipeline in self.tables_in_db():
+                self.cur.execute("select comp_norm_test_gd from {} where run_name = ?"\
+                        .format(pipeline), [run_name])
+                gd_path, = self.cur.fetchone()
+                gd_paths.append(gd_path)
+
+            ctrl_gd_path = self.settings.data_ctrl_gd_fmt.format(run_name)
+            ref_seqs = GenomeDiff(ctrl_gd_path).ref_sequence_file_names()
+
+            for ref_seq in ref_seqs:
+                assert os.path.exists(ref_seq)
+            
+            output_path = self.settings.results_dcamp_genome_diff_compare_fmt.format(run_name)
+            if not os.path.exists(output_path):
+                breseq.command.genome_diff_compare(output_path, ref_seqs, gd_paths) 
+
+            for pipeline in self.tables_in_db():
+                self.cur.execute("update {} set genome_diff_comp_html = ? where run_name = ?"\
+                        .format(pipeline), [output_path, run_name])
+
+
+
     def test_db(self): 
+       key = "comp_norm_test_gd"
        for table in self.tables_in_db():
-            for row in self.cur.execute("select * from {}".format(table)):
+            for row in self.cur.execute("select comp_norm_test_gd from {} where run_name = \"rand_del_large_10\"".format(table, key)):
                 print row
 
 

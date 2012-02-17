@@ -22,15 +22,20 @@ class GenomeDiff:
     def __init__(self, file_path):
         self._header_info = HeaderInfo()
         self._entry_list = DiffEntryList()
-        self.FromGenomeDiffFile(file_path)
+        self.from_genome_diff_file(file_path)
         
     #Getters.
     def entry_list(self):
         return self._entry_list
     def header_info(self):
         return self._header_info
+    def ref_sequence_file_names(self):
+        ret_val = list()
+        for ref_seq in self._header_info.ref_seqs:
+            ret_val.append(os.path.basename(ref_seq))
+        return ret_val
     
-    def FromGenomeDiffFile(self, file_path):
+    def from_genome_diff_file(self, file_path):
         self._header_info.file_path = file_path
         self._header_info.file_name = os.path.basename(file_path)
         self._header_info.run_name  = os.path.basename(file_path).split('.')[0] 
@@ -63,6 +68,7 @@ class GenomeDiff:
             if not line: continue
             de = DiffEntry(line)
             self._entry_list.append(de)
+
         
         
         
