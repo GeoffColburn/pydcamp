@@ -1,28 +1,29 @@
 #!/usr/bin/env python
 import sys, os
 import sqlite3
+import shutil
 
 import extern.markup as markup
 from extern.markup import oneliner as e
+
 from breseq.genome_diff import GenomeDiff
+from libdcamp.job import Job
+
 
 
 class HtmlFactory:
 
-    def __init__(self, settings):
-        self.settings = settings
-        assert os.path.exists(self.settings.results_dcamp_paths_db_pth)
-        self.con = sqlite3.connect(self.settings.results_dcamp_paths_db_pth)
-        self.cur = self.con.cursor() 
+    def __init__(self, job):
+        self.job = job
 
-    def TablesInDb(self):
-        ret_val = list()
-        for table in self.cur.execute("select name from sqlite_master where type='table'"):
-            ret_val.append(table[0])
-        return ret_val
+    def copy_css_style(self, path):
+        shutil.copy2(self.job.settings.shared_css_style_pth, path)
+        return path
 
 
-    def WriteHeader(self, page):
+
+
+    def write_header(self, page):
         page.div(class_ = "header_container")
 
         page.div(class_ = "nav_bar")
@@ -82,53 +83,90 @@ class HtmlFactory:
 
         return page
 
-    def WriteValidationContent(self, page, key = "", title = ""):
-        page.div(class_ = "content_container")
+    def create_validation_content(self, page, key = "", title = ""):
+        self.job.con.row_factory = sqlite3.Row
+        cur = self.job.con.cursor()
+        page.div(id = "validation_table")
+        #Table header.
+        page.table()
+        page.tr()
+        page.th()#Empty one to offset run_names below it.
+        for pipeline in self.job.tables_in_db():
+            page.th(pipeline.capitalize(), class_ = "validation_table", colspan = 3)
+        page.th()
+        page.tr.close()
+        page.tr()
+        page.th("Name")
+        for pipeline in self.job.tables_in_db():
+            page.th("TP")
+            page.th("FN")
+            page.th("FP")
+        page.th("Files")
+        page.tr.close()
 
-        page.div(class_ = "content_left_nav")
-        page.ul()
-        for pipeline in self.TablesInDb():
-            self.cur.execute("select run_name from {}".format(pipeline))
-            for run_name, in self.cur.fetchall(): pass
+        #Table data.
+        is_alt = False
+        for run_name in self.job.completed_run_names_in_db():
+            if is_alt:
+                page.tr(class_ = "alternate_row")
+            else:
+                page.tr()
+            is_alt = False if is_alt else True
+            page.th(e.a(run_name, href = self.job.settings.results_dcamp_genome_diff_compare_fmt.format(run_name)))
+            file_anchors = list()
+            for pipeline in self.job.tables_in_db():
+                cur.execute("select * from {} where run_name = ?".format(pipeline), [run_name])
+                row = cur.fetchone()
+                gd = GenomeDiff(row[key])
+                header_info = gd.header_info()
+                assert "TP|FN|FP" in header_info.other
+                validation = header_info.other["TP|FN|FP"].split('|')
+                tp = validation[0]
+                fn = validation[1]
+                fp = validation[2]
+                page.td(tp, class_ = "validation_table_column")
+                page.td(fn, class_ = "validation_table_column")
+                page.td(fp, class_ = "validation_table_last_column")
+                file_anchors.append(e.a(pipeline.capitalize(), href = row[key]))
+            page.th("/".join(file_anchors))
 
-        
-        page.ul.close()
-
-
-
-        page.div.close()#End content_left_nav.
-        
-        #for pipeline in self.TablesInDb():
-        #    self.cur.exectue("select run_name, {} from {}".format(key, pipeline)
-
-        page.div.close()#End content_container.
-
+            page.tr.close()
+        page.table.close()
+        page.div.close()
         return page
 
-
-    def CreateIndexPage(self, path):
+    def write_index_page(self, path):
         page = markup.page()
-        css = ["dcamp_style.css", "pro_dropdown_3/pro_dropdown_3.css"]
-        script = {"pro_dropdown_3/stuHover.js":"javascript"}
-        page.init(css = css, script = script)
-
-        page.div(class_ = "main_container")
-        page = self.WriteHeader(page)
-        page.div.close()
+        css_path = self.copy_css_style(self.job.settings.results_dcamp_css_pth)
+        css = [css_path]
+        page.init(css = css_path)
+        page = self.create_validation_content(page, key = "comp_norm_test_gd")
 
         open(path, 'w').write(str(page) + '\n')
 
+#    def create_index_page(self, path):
+#        page = markup.page()
+#        css = ["dcamp_style.css", "pro_dropdown_3/pro_dropdown_3.css"]
+#        script = {"pro_dropdown_3/stuHover.js":"javascript"}
+#        page.init(css = css, script = script)
+#
+#        page.div(class_ = "main_container")
+#        page = self.write_header(page)
+#        page.div.close()
+#
+#        open(path, 'w').write(str(page) + '\n')
 
-    def CreateValidationPage(self, path, key = "", title = ""):
+
+    def create_validation_page(self, path, key = "", title = ""):
         page = markup.page()
         css = ["dcamp_style.css", "pro_dropdown_3/pro_dropdown_3.css"]
         script = {"pro_dropdown_3/stuHover.js":"javascript"}
         page.init(css = css, script = script)
 
         page.div(class_ = "main_container")
-        page = self.WriteHeader(page)
+        page = self.write_header(page)
 
-        page = self.WriteValidationContent(page)
+        page = self.write_validationcontent(page)
 
 
         page.div.close() #Main container

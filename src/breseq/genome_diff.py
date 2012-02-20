@@ -45,9 +45,8 @@ class GenomeDiff:
         #Hander header info.
         line = fp.readline()
         assert line.startswith("#=GENOME_DIFF")
-        
-        while (line.startswith("#=")):
-            line = fp.readline()
+        line = fp.readline()
+        while (line[0] == '#' and line[1] == '='):
             if (line.startswith("#=REFSEQ")): 
                 self._header_info.ref_seqs.append(line.split()[1])
             elif (line.startswith("#=READSEQ")):
@@ -60,6 +59,7 @@ class GenomeDiff:
                     key = tokens.pop(0)
                     value = " ".join(tokens) if len(tokens) > 0 else "?"
                     self._header_info.other[key] = value
+            line = fp.readline()
                 
         #Handle diff entries.
         for line in fp.readlines():

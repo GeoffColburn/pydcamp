@@ -9,6 +9,8 @@ class Settings:
                  output = "03_Output",\
                  logs = "04_Logs",\
                  results = "05_Results"):
+        self.shared_dir_path = os.path.join(os.environ["HOME"], "local/share/dcamp")
+        self.shared_css_style_pth = os.path.join(self.shared_dir_path, "dcamp/style.css")
 
         #Data:
         self.data = data

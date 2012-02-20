@@ -18,5 +18,6 @@ setup(name = "dcamp",
 
                     ("share/dcamp/picard_tools", ["share/picard_tools/AddOrReplaceReadGroups.jar",
                                                   "share/picard_tools/MarkDuplicates.jar", 
-                                                  "share/picard_tools/ValidateSamFile.jar"])]
+                                                  "share/picard_tools/ValidateSamFile.jar"]),
+                    ("share/dcamp/dcamp", ["share/dcamp/style.css"])]
       )#End setup.

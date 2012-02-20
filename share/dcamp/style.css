@@ -1,0 +1,53 @@
+#validation_table div {
+  margin:0px auto;
+  width:80%;
+}
+
+#validation_table table {
+  border:3px solid #0B5FA5;
+  border-collapse:collapse;
+  font-family:"Trebuchet MS", Arial, Helvetica, sans-serif;
+  margin:0px auto;
+  text-align:center;
+}
+
+#validation_table th {
+  background-color:#25547B;
+  color:#ffffff;
+  font-size:1em;
+  padding:3px 7px 2px 7px;
+  padding-bottom:4px;
+  padding-top:5px;
+  text-align:center;
+}
+
+#validation_table a {
+  color:#ffffff;
+}
+
+td.validation_table_run_name_column {
+  background-color:#25547B;
+	color:#ff9933;
+  font-size:1em;
+  padding:4px 7px 3px 7px;
+
+}
+
+td.validation_table_column {
+  border:1px solid #0B5FA5;
+  font-size:1em;
+  padding:3px 7px 2px 7px;
+}
+
+td.validation_table_last_column {
+  border:1px solid #0B5FA5;
+  border-right:3px solid #0B5FA5;
+  font-size:1em;
+  padding:3px 7px 2px 7px;
+}
+
+tr.alternate_row {
+  background-color:#BCDEFF;
+  color:#000000;
+}
+

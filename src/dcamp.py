@@ -43,6 +43,10 @@ def do_results(args):
     if args.action == "compare-gds" or args.action == "process":
         job.compare_gds()
     
+    if args.action == "html-output" or arg.action == "process":
+        html_factory = HtmlFactory(job)
+        html_factory.write_index_page("index.html")
+    
     job.commit_db()
 
 def do_create_alignment(args):
@@ -158,6 +162,31 @@ def do_gatk(args):
     gatk.unified_genotyper(fasta_path, realigned_bam_path, vcf_path)
     breseq.command.vcf2gd(vcf_path, gd_path)
 
+import extern.markup as markup
+def do_html(args):
+    table = ValidationTable()
+    table.table()
+    table.tr()
+    table.th(1)
+    table.th(2)
+    table.th(3)
+    table.th(4)
+    table.tr.close()
+
+    table.tr()
+    table.td(1)
+    table.td(2)
+    table.td(3)
+    table.td(4)
+    table.tr.close()
+
+    table.table.close()
+    print table
+
+    page = markup.page()
+    print page
+
+
 
 def main():
     main_parser = argparse.ArgumentParser()
@@ -170,7 +199,8 @@ def main():
     results_parser.add_argument("--output",    dest = "output",    default = "03_Output")
     results_parser.add_argument("--logs",      dest = "logs",      default = "04_Logs")
     results_parser.add_argument("--results",   dest = "results",   default = "05_Results")
-    results_parser.add_argument("--action",    dest = "action",    default = "process", choices = ["convert", "normalize", "compare-validat", "process", "compare-gds"])
+    results_parser.add_argument("--action",    dest = "action",\
+            default = "process", choices = ["convert", "normalize", "compare-validate", "process", "compare-gds", "html-output"])
     results_parser.set_defaults(func = do_results)
 
     #create-alignment.
@@ -206,8 +236,16 @@ def main():
     gatk_parser.add_argument("read_paths", nargs = '+')
     gatk_parser.set_defaults(func = do_gatk)
 
+    #html output
+    html_parser = subparser.add_parser("html")
+    html_parser.set_defaults(func = do_html)
+
     args = main_parser.parse_args()
     args.func(args)
+
+
+    
+
 
     
 

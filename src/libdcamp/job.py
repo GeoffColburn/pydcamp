@@ -9,7 +9,6 @@ import breseq.command
 
 from libdcamp.settings import Settings
 from breseq.genome_diff import GenomeDiff
-from libdcamp.html_factory import HtmlFactory
 
 
 class Job:
@@ -354,8 +353,7 @@ class Job:
                 self.cur.execute("update {} set log = ? where run_name = ?".format(pipeline), (new_path, run_name))
 
     def compare_gds(self, key = "comp_norm_test_gd"):
-        run_names = self.completed_run_names_in_db()
-        for run_name in run_names:
+        for run_name in self.completed_run_names_in_db():
             gd_paths = list()
             for pipeline in self.tables_in_db():
                 self.cur.execute("select comp_norm_test_gd from {} where run_name = ?"\
