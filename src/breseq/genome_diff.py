@@ -46,6 +46,7 @@ class GenomeDiff:
         line = fp.readline()
         assert line.startswith("#=GENOME_DIFF")
         line = fp.readline()
+        if not len(line):return
         while (line[0] == '#' and line[1] == '='):
             if (line.startswith("#=REFSEQ")): 
                 self._header_info.ref_seqs.append(line.split()[1])
