@@ -365,7 +365,9 @@ class Job:
             ref_seqs = GenomeDiff(ctrl_gd_path).ref_sequence_file_names()
 
             for ref_seq in ref_seqs:
-                assert os.path.exists(ref_seq)
+                if not os.path.exists(ref_seq):
+                    print ref_seq, ctrl_gd_path
+                    sys.exit(1)
             
             output_path = self.settings.results_dcamp_genome_diff_compare_fmt.format(run_name)
             if not os.path.exists(output_path):
