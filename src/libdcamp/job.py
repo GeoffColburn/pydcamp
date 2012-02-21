@@ -364,7 +364,8 @@ class Job:
             ctrl_gd_path = self.settings.data_ctrl_gd_fmt.format(run_name)
             ref_seqs = GenomeDiff(ctrl_gd_path).ref_sequence_file_names()
 
-            for ref_seq in ref_seqs:
+            for i, ref_seq in enumerate(ref_seqs):
+                ref_seqs[i] = os.path.join(self.settings.downloads, ref_seq)
                 if not os.path.exists(ref_seq):
                     print ref_seq, ctrl_gd_path
                     sys.exit(1)
