@@ -366,8 +366,8 @@ class Job:
 
             for i, ref_seq in enumerate(ref_seqs):
                 ref_seqs[i] = os.path.join(self.settings.downloads, ref_seq)
-                if not os.path.exists(ref_seq):
-                    print ref_seq, ctrl_gd_path
+                if not os.path.exists(ref_seqs[i]):
+                    print ref_seqs[i], ctrl_gd_path
                     sys.exit(1)
             
             output_path = self.settings.results_dcamp_genome_diff_compare_fmt.format(run_name)
