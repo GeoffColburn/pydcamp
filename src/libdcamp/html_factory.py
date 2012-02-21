@@ -112,7 +112,9 @@ class HtmlFactory:
             else:
                 page.tr()
             is_alt = False if is_alt else True
-            page.th(e.a(run_name, href = self.job.settings.results_dcamp_genome_diff_compare_fmt.format(run_name)))
+            href = os.path.relpath(self.job.settings.results_dcamp_genome_diff_compare_fmt.format(run_name),\
+                    self.job.settings.results)
+            page.th(e.a(run_name, href = href))
             file_anchors = list()
             for pipeline in self.job.tables_in_db():
                 cur.execute("select * from {} where run_name = ?".format(pipeline), [run_name])
@@ -127,7 +129,7 @@ class HtmlFactory:
                 page.td(tp, class_ = "validation_table_column")
                 page.td(fn, class_ = "validation_table_column")
                 page.td(fp, class_ = "validation_table_last_column")
-                file_anchors.append(e.a(pipeline.capitalize(), href = row[key]))
+                file_anchors.append(e.a(pipeline.capitalize(), href = os.path.join("..", row[key])))
             page.th("/".join(file_anchors))
 
             page.tr.close()
@@ -138,6 +140,7 @@ class HtmlFactory:
     def write_index_page(self, path):
         page = markup.page()
         css_path = self.copy_css_style(self.job.settings.results_dcamp_css_pth)
+        css_path = os.path.relpath(css_path, self.job.settings.results)
         css = [css_path]
         page.init(css = css_path)
         page = self.create_validation_content(page, key = "comp_norm_test_gd")

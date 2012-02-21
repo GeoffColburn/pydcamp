@@ -6,6 +6,8 @@ import shutil
 import argparse
 
 import breseq.command
+from breseq.genome_diff import GenomeDiff
+
 import extern.samtools as samtools
 import extern.gatk as gatk
 import extern.picardtools as picardtools
@@ -45,7 +47,7 @@ def do_results(args):
     
     if args.action == "html-output" or arg.action == "process":
         html_factory = HtmlFactory(job)
-        html_factory.write_index_page("index.html")
+        html_factory.write_index_page(job.settings.results_index_pth)
     
     job.commit_db()
 
@@ -162,30 +164,63 @@ def do_gatk(args):
     gatk.unified_genotyper(fasta_path, realigned_bam_path, vcf_path)
     breseq.command.vcf2gd(vcf_path, gd_path)
 
-import extern.markup as markup
-def do_html(args):
-    table = ValidationTable()
-    table.table()
-    table.tr()
-    table.th(1)
-    table.th(2)
-    table.th(3)
-    table.th(4)
-    table.tr.close()
+def do_create_simulated_gds(args):
 
-    table.tr()
-    table.td(1)
-    table.td(2)
-    table.td(3)
-    table.td(4)
-    table.tr.close()
+    quality_scores = list()
+    if args.quality_score == "all" or args.quality_score == "5": quality_scores.append("5")
+    if args.quality_score == "all" or args.quality_score == "10": quality_scores.append("10")
+    if args.quality_score == "all" or args.quality_score == "20": quality_scores.append("20")
+    if args.quality_score == "all" or args.quality_score == "40": quality_scores.append("40")
+    if args.quality_score == "all" or args.quality_score == "80": quality_scores.append("80")
 
-    table.table.close()
-    print table
+    base_name = os.path.basename(args.genome_diff).split(".gd")[0]
+    ref_file = os.path.basename(args.ref_seq)
+    values = list()
+    for quality_score in quality_scores:
+        this_base_name = "{}_{}".format(base_name, quality_score) 
+        gd_file = "{}.gd".format(this_base_name)
+        read_file = "{}.fastq.gz".format(this_base_name)
 
-    page = markup.page()
-    print page
+        ref_header = "#=REFSEQ\t{}:{}\n".format(args.ref_key, os.path.join(args.ref_prefix, ref_file))
+        read_header = "#=READSEQ\t{}:{}\n".format(args.read_key, os.path.join(args.read_prefix, read_file))
+        values.append((gd_file, ref_header, read_header))
 
+    fin = open(args.genome_diff, 'r')
+    lines = fin.readlines()
+    for gd_file, ref_header, read_header in values:
+        fout = open(gd_file, 'w')
+        for line in lines:
+            if line.startswith('#'):
+                fout.write(line)
+            else:
+                lines.append(line)
+                break
+        fout.write(ref_header)
+        fout.write(read_header)
+        for line in lines:
+            fout.write(line)
+
+
+        
+
+
+        
+
+
+
+    
+
+
+
+
+
+
+def do_testing(args):
+    gd = GenomeDiff(args.genome_diff)
+
+    print gd.header_info().other
+    print gd.header_info().ref_seqs
+    print gd.header_info().read_seqs
 
 
 def main():
@@ -236,26 +271,38 @@ def main():
     gatk_parser.add_argument("read_paths", nargs = '+')
     gatk_parser.set_defaults(func = do_gatk)
 
-    #html output
-    html_parser = subparser.add_parser("html")
-    html_parser.set_defaults(func = do_html)
+    #create-simulated-gds
+    sim_gd_parser = subparser.add_parser("create-simulated-gds")
+    sim_gd_parser.add_argument("-g", dest = "genome_diff")
+    sim_gd_parser.add_argument("-r", dest = "ref_seq", default = "REL606.5.gbk")
+    sim_gd_parser.add_argument("--quality-score", dest = "quality_score",\
+            default = "all", choices = ["5", "10", "20", "40", "80"])
+    sim_gd_parser.add_argument("--ref-key", dest = "ref_key", default = "BarrickLab-Private")
+    sim_gd_parser.add_argument("--ref-prefix", dest = "ref_prefix", default = "genomes/simulated")
+    sim_gd_parser.add_argument("--read-key", dest = "read_key", default = "BarrickLab-Private")
+    sim_gd_parser.add_argument("--read-prefix", dest = "read_prefix", default = "genomes/simulated")
+    sim_gd_parser.set_defaults(func = do_create_simulated_gds)
 
+
+    #testing
+    testing_parser = subparser.add_parser("testing")
+    testing_parser.add_argument("-g", dest = "genome_diff")
+    testing_parser.set_defaults(func = do_testing)
+
+
+
+
+
+
+
+
+
+    #Process args.
     args = main_parser.parse_args()
     args.func(args)
 
 
     
-
-
-    
-
-
-    
-    #html_factory = HtmlFactory(settings)
-    ##html_factory.CreateIndexPage("index.html")
-    #html_factory.CreateValidationPage("index.html")
-
-
 
 
 

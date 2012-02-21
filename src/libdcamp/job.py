@@ -379,6 +379,8 @@ class Job:
 
 
 
+
+
     def test_db(self): 
        key = "comp_norm_test_gd"
        for table in self.tables_in_db():

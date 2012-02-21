@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import sys, os
+import string
 
 from diff_entry import DiffEntry
 from diff_entry import DiffEntryList
@@ -43,11 +44,12 @@ class GenomeDiff:
         fp = open(file_path, 'r')
         
         #Hander header info.
-        line = fp.readline()
-        assert line.startswith("#=GENOME_DIFF")
-        line = fp.readline()
-        if not len(line):return
-        while (line[0] == '#' and line[1] == '='):
+        lines = fp.readlines()
+        assert string.find(lines.pop(0), "#=GENOME_DIFF") == 0
+        for line in lines:
+            if string.find(line, "#=") != 0:
+                lines.append(line)
+                break
             if (line.startswith("#=REFSEQ")): 
                 self._header_info.ref_seqs.append(line.split()[1])
             elif (line.startswith("#=READSEQ")):
@@ -63,7 +65,7 @@ class GenomeDiff:
             line = fp.readline()
                 
         #Handle diff entries.
-        for line in fp.readlines():
+        for line in lines:
             if line.startswith("#"): continue
             line = line.rstrip('\n')
             if not line: continue
