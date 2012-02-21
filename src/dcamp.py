@@ -45,7 +45,7 @@ def do_results(args):
     if args.action == "compare-gds" or args.action == "process":
         job.compare_gds()
     
-    if args.action == "html-output" or arg.action == "process":
+    if args.action == "html-output" or args.action == "process":
         html_factory = HtmlFactory(job)
         html_factory.write_index_page(job.settings.results_index_pth)
     
