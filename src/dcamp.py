@@ -253,6 +253,7 @@ def main():
     gatk_parser = subparser.add_parser("gatk")
     gatk_parser.add_argument("-o", dest = "output_dir")
     gatk_parser.add_argument("-r", action = "append", dest = "ref_paths")
+    gatk_parser.add_argument("--glm", dest = "glm_option", default = "BOTH", choices = ["BOTH", "SNP", "INDEL"])
     gatk_parser.add_argument("--pair-ended", action = "store_true", dest = "pair_ended", default = False)
     gatk_parser.add_argument("read_paths", nargs = '+')
     gatk_parser.set_defaults(func = do_gatk)

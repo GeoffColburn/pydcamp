@@ -49,14 +49,14 @@ def count_covariates(ref_path, bam_path):
     print cmd
     assert not os.system(cmd), "Command: {}".format(cmd)
 
-def unified_genotyper(ref_path, bam_path, output_vcf_path):
+def unified_genotyper(ref_path, bam_path, output_vcf_path, glm_option):
     cmd = "java -jar {} \
           -T UnifiedGenotyper \
           -R {} \
           -I {} \
           -o {} \
           -l INFO \
-          -glm BOTH".format(_GENOME_ANALYSIS_TK, ref_path, bam_path, output_vcf_path)
+          -glm {}".format(_GENOME_ANALYSIS_TK, ref_path, bam_path, output_vcf_path, glm_option)
     print cmd
     assert not os.system(cmd), "Command: {}".format(cmd)
     return output_vcf_path
