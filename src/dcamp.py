@@ -143,16 +143,28 @@ def do_gatk(args):
             os.makedirs(step_3_dir)
             
         #Step: Samtools: Index BAM.
-        sorted_bam_path = samtools.index(sorted_bam_path)
+        index_done_file = os.path.join(step_3_dir, "index.done")
+        if not os.path.exists(index_done_file):
+            sorted_bam_path = samtools.index(sorted_bam_path)
+            open(index_done_file, 'w').close()
         
         #Step: Gatk: Intervals.
-        intervals_path = gatk.realigner_target_creator(fasta_path, sorted_bam_path)
+        intervals_done_file = os.path.join(step_3_dir, "intervals.done")
+        if not os.path.exists(intervals_done_file):
+            intervals_path = gatk.realigner_target_creator(fasta_path, sorted_bam_path)
+            open(intervals_done_file, 'w').close()
         
         #Step: Gatk: Indel Realigner.
-        realigned_bam_path = gatk.indel_realigner(fasta_path, sorted_bam_path, intervals_path)
+        indel_realign_done_file = os.path.join(step_3_dir, "indel_realign.done")
+        if not os.path.exists(indel_realign_done_file):
+            realigned_bam_path = gatk.indel_realigner(fasta_path, sorted_bam_path, intervals_path)
+            open(indel_realign_done_file, 'w').close()
         
         #Step: Picardtools: Validate alignment.
-        picardtools.validate_alignment(realigned_bam_path)
+        validate_alignment_done_file = os.path.join(step_3_dir, "validate_alignment.done")
+        if not os.path.exists(validate_alignment_done_file):
+            picardtools.validate_alignment(realigned_bam_path)
+            open(validate_alignment_done_file, 'w').close()
         
 #Gatk Output
 #Step 4
@@ -162,7 +174,7 @@ def do_gatk(args):
 
     if not os.path.exists(output_dir): os.makedirs(output_dir)
     
-    gatk.unified_genotyper(fasta_path, realigned_bam_path, vcf_path)
+    gatk.unified_genotyper(fasta_path, realigned_bam_path, vcf_path, args.glm_option)
     breseq.command.vcf2gd(vcf_path, gd_path)
 
 def do_create_simulated_gds(args):
