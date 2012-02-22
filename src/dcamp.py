@@ -4,6 +4,7 @@ import sqlite3
 import glob
 import shutil
 import argparse
+import string
 
 import breseq.command
 from breseq.genome_diff import GenomeDiff
@@ -167,7 +168,7 @@ def do_gatk(args):
 def do_create_simulated_gds(args):
 
     quality_scores = list()
-    if args.quality_score == "all" or args.quality_score == "5": quality_scores.append("5")
+    if args.quality_score == "all" or args.quality_score == "05": quality_scores.append("05")
     if args.quality_score == "all" or args.quality_score == "10": quality_scores.append("10")
     if args.quality_score == "all" or args.quality_score == "20": quality_scores.append("20")
     if args.quality_score == "all" or args.quality_score == "40": quality_scores.append("40")
@@ -185,33 +186,18 @@ def do_create_simulated_gds(args):
         read_header = "#=READSEQ\t{}:{}\n".format(args.read_key, os.path.join(args.read_prefix, read_file))
         values.append((gd_file, ref_header, read_header))
 
-    fin = open(args.genome_diff, 'r')
-    lines = fin.readlines()
     for gd_file, ref_header, read_header in values:
+        lines = open(args.genome_diff, 'r').readlines()
         fout = open(gd_file, 'w')
-        for line in lines:
-            if line.startswith('#'):
-                fout.write(line)
+        while lines:
+            if string.find(lines[0], "#=") == 0:
+                fout.write(lines.pop(0))
             else:
-                lines.append(line)
                 break
         fout.write(ref_header)
         fout.write(read_header)
         for line in lines:
             fout.write(line)
-
-
-        
-
-
-        
-
-
-
-    
-
-
-
 
 
 
@@ -276,7 +262,7 @@ def main():
     sim_gd_parser.add_argument("-g", dest = "genome_diff")
     sim_gd_parser.add_argument("-r", dest = "ref_seq", default = "REL606.5.gbk")
     sim_gd_parser.add_argument("--quality-score", dest = "quality_score",\
-            default = "all", choices = ["5", "10", "20", "40", "80"])
+            default = "all", choices = ["05", "10", "20", "40", "80"])
     sim_gd_parser.add_argument("--ref-key", dest = "ref_key", default = "BarrickLab-Private")
     sim_gd_parser.add_argument("--ref-prefix", dest = "ref_prefix", default = "genomes/simulated")
     sim_gd_parser.add_argument("--read-key", dest = "read_key", default = "BarrickLab-Private")
