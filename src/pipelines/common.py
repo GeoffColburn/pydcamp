@@ -146,7 +146,7 @@ def handle_multiple_bams(sam_paths, bam_paths, output_dir):
 def add_read_groups(aln_paths, output_dir):
     rg_aln_paths = list()
     for aln_path in aln_paths:
-        rg_aln_name = "RG_{}.sam".format(libdcamp.common.get_base_name(aln_path))
+        rg_aln_name = "RG_{}".format(os.path.basename(aln_path))
         rg_aln_path = os.path.join(output_dir, rg_aln_name)
         
         rg_aln_paths.append(rg_aln_path)
@@ -181,6 +181,22 @@ def sort_bams(bam_paths, output_dir):
         samtools.sort(bam_path, bam_sorted_prefix)
     assert len(sorted_bam_paths)
     return sorted_bam_paths
+
+def add_sequence_dict(ref_path, aln_path, output_dir):
+    output_basename = os.path.basename(aln_path)
+    output_path = os.path.join(output_dir, "SD_{}".format(output_basename))
+    if os.path.exists(output_path): return output_path
+
+    picardtools.create_sequence_dictionary(ref_path, output_path)
+    fout = open(output_path, 'a')
+    for line in open(aln_path, 'r').readlines():
+        fout.write(line)
+    return output_path
+
+
+
+
+
 
 def prepare_reference(args, output_dir):
     step_1_dir  = os.path.join(args.output_dir, output_dir)
@@ -218,32 +234,45 @@ def create_alignment(args, fasta_path, output_dir):
     if not os.path.exists(step_2_done_file):
         print "++Step 2 reference alignment started."
         if not os.path.exists(step_2_dir): os.makedirs(step_2_dir)
-        
-        #Step: BWA: SAI(s)
-        sam_args = bwa_aln(fasta_path, args.read_paths, step_2_dir)
-                
-        #Step: BWA: SAM(s)
-        sam_paths = list()
-        if args.pair_ended == True:
-            sam_paths = bwa_sampe(sam_args, step_2_dir)
-        else:
-            sam_paths = bwa_samse(sam_args, step_2_dir)
-        
-        #Step: Picardtools: Add read groups.
-        read_group_sam_paths = add_read_groups(sam_paths, step_2_dir)
 
-        #Step: Samtools: BAM(s)
-        bam_paths = convert_sam_to_bam(read_group_sam_paths, step_2_dir)
+        bam_paths = list()
+        #Read file input.
+        if not args.aln_paths and args.read_paths:
+            #Step: BWA: SAI(s)
+            sam_args = bwa_aln(fasta_path, args.read_paths, step_2_dir)
+                    
+            #Step: BWA: SAM(s)
+            sam_paths = list()
+            if args.pair_ended == True:
+                sam_paths = bwa_sampe(sam_args, step_2_dir)
+            else:
+                sam_paths = bwa_samse(sam_args, step_2_dir)
+        
+            #Step: Picardtools: Add read groups.
+            read_group_sam_paths = add_read_groups(sam_paths, step_2_dir)
+
+            #Step: Samtools: BAM(s)
+            bam_paths = convert_sam_to_bam(read_group_sam_paths, step_2_dir)
+
+        #Alignment file input.
+        elif args.aln_paths:
+            sd_aln_paths = list()
+            for aln_path in args.aln_paths:
+                sd_aln_path = add_sequence_dict(fasta_path, aln_path, step_2_dir)
+                sd_aln_paths.append(sd_aln_path)
+            #Step: Picardtools: Add read groups.
+            read_group_sam_paths = add_read_groups(sd_aln_paths, step_2_dir)
+
+            #Step: Samtools: BAM(s)
+            bam_paths = convert_sam_to_bam(read_group_sam_paths, step_2_dir)
+
         
         #Step: Samtools: Sort BAM(s)
         sorted_bam_paths = list()
-        try:
-            if args.sort_bam == True:
-                sorted_bam_paths = sort_bams(bam_paths, step_2_dir)
-            else:
-                sorted_bam_paths = bam_paths
-        except:
+        if args.sort_bam and args.sort_bam == True:
             sorted_bam_paths = sort_bams(bam_paths, step_2_dir)
+        else:
+            sorted_bam_paths = bam_paths
 
         assert sorted_bam_paths
         

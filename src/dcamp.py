@@ -149,22 +149,17 @@ def do_gatk(args):
             open(index_done_file, 'w').close()
         
         #Step: Gatk: Intervals.
-        intervals_done_file = os.path.join(step_3_dir, "intervals.done")
-        if not os.path.exists(intervals_done_file):
-            intervals_path = gatk.realigner_target_creator(fasta_path, sorted_bam_path)
-            open(intervals_done_file, 'w').close()
+        intervals_path = gatk.realigner_target_creator(fasta_path, sorted_bam_path)
         
         #Step: Gatk: Indel Realigner.
         indel_realign_done_file = os.path.join(step_3_dir, "indel_realign.done")
-        if not os.path.exists(indel_realign_done_file):
-            realigned_bam_path = gatk.indel_realigner(fasta_path, sorted_bam_path, intervals_path)
-            open(indel_realign_done_file, 'w').close()
+        realigned_bam_path = gatk.indel_realigner(fasta_path, sorted_bam_path, intervals_path)
         
         #Step: Picardtools: Validate alignment.
-        validate_alignment_done_file = os.path.join(step_3_dir, "validate_alignment.done")
-        if not os.path.exists(validate_alignment_done_file):
-            picardtools.validate_alignment(realigned_bam_path)
-            open(validate_alignment_done_file, 'w').close()
+        #validate_alignment_done_file = os.path.join(step_3_dir, "validate_alignment.done")
+        #if not os.path.exists(validate_alignment_done_file):
+        #    picardtools.validate_alignment(realigned_bam_path)
+        #    open(validate_alignment_done_file, 'w').close()
         
 #Gatk Output
 #Step 4
@@ -211,8 +206,6 @@ def do_create_simulated_gds(args):
         for line in lines:
             fout.write(line)
 
-
-
 def do_testing(args):
     gd = GenomeDiff(args.genome_diff)
 
@@ -241,6 +234,7 @@ def main():
     create_alignment_parser.add_argument("-o", dest = "output_dir")
     create_alignment_parser.add_argument("-r", action = "append", dest = "ref_paths")
     create_alignment_parser.add_argument("--pair-ended", action = "store_true", dest = "pair_ended", default = False)
+    create_alignment_parser.add_argument("--sort_bam", action = "store_true", dest = "sort_bam", default = True)
     create_alignment_parser.add_argument("read_paths", nargs = '+')
     create_alignment_parser.set_defaults(func = do_create_alignment)
 
@@ -248,7 +242,9 @@ def main():
     samtools_parser = subparser.add_parser("samtools")
     samtools_parser.add_argument("-o", dest = "output_dir")
     samtools_parser.add_argument("-r", action = "append", dest = "ref_paths")
+    samtools_parser.add_argument("-a", action = "append", dest = "aln_paths", required = False)
     samtools_parser.add_argument("--pair-ended", action = "store_true", dest = "pair_ended", default = False)
+    samtools_parser.add_argument("--sort_bam", action = "store_true", dest = "sort_bam", default = True)
     samtools_parser.add_argument("read_paths", nargs = '+')
     samtools_parser.set_defaults(func = do_samtools)
 
@@ -265,9 +261,11 @@ def main():
     gatk_parser = subparser.add_parser("gatk")
     gatk_parser.add_argument("-o", dest = "output_dir")
     gatk_parser.add_argument("-r", action = "append", dest = "ref_paths")
+    gatk_parser.add_argument("-a", action = "append", dest = "aln_paths", required = False)
     gatk_parser.add_argument("--glm", dest = "glm_option", default = "BOTH", choices = ["BOTH", "SNP", "INDEL"])
     gatk_parser.add_argument("--pair-ended", action = "store_true", dest = "pair_ended", default = False)
-    gatk_parser.add_argument("read_paths", nargs = '+')
+    gatk_parser.add_argument("--sort_bam", action = "store_true", dest = "sort_bam", default = True)
+    gatk_parser.add_argument("read_paths", nargs = '?', default = None)
     gatk_parser.set_defaults(func = do_gatk)
 
     #create-simulated-gds
