@@ -241,7 +241,7 @@ def main():
     #samtools.
     samtools_parser = subparser.add_parser("samtools")
     samtools_parser.add_argument("-o", dest = "output_dir")
-    samtools_parser.add_argument("-r", action = "append", dest = "ref_paths")
+    samtools_parser.add_argument("-r", action = "append", dest = "ref_paths", required = True)
     samtools_parser.add_argument("-a", action = "append", dest = "aln_paths", required = False)
     samtools_parser.add_argument("--pair-ended", action = "store_true", dest = "pair_ended", default = False)
     samtools_parser.add_argument("--sort_bam", action = "store_true", dest = "sort_bam", default = True)
@@ -260,7 +260,7 @@ def main():
     #gatk.
     gatk_parser = subparser.add_parser("gatk")
     gatk_parser.add_argument("-o", dest = "output_dir")
-    gatk_parser.add_argument("-r", action = "append", dest = "ref_paths")
+    gatk_parser.add_argument("-r", action = "append", dest = "ref_paths", required = True)
     gatk_parser.add_argument("-a", action = "append", dest = "aln_paths", required = False)
     gatk_parser.add_argument("--glm", dest = "glm_option", default = "BOTH", choices = ["BOTH", "SNP", "INDEL"])
     gatk_parser.add_argument("--pair-ended", action = "store_true", dest = "pair_ended", default = False)
