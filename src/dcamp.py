@@ -232,7 +232,7 @@ def main():
     #create-alignment.
     create_alignment_parser = subparser.add_parser("create-alignment")
     create_alignment_parser.add_argument("-o", dest = "output_dir")
-    create_alignment_parser.add_argument("-r", action = "append", dest = "ref_paths")
+    create_alignment_parser.add_argument("-r", action = "append", dest = "ref_paths", required = True)
     create_alignment_parser.add_argument("--pair-ended", action = "store_true", dest = "pair_ended", default = False)
     create_alignment_parser.add_argument("--sort_bam", action = "store_true", dest = "sort_bam", default = True)
     create_alignment_parser.add_argument("read_paths", nargs = '+')
