@@ -21,8 +21,8 @@ class Settings:
 
         #Output:
         self.output = output
-        self.output_gd_fmt = os.path.join(self.output, "{}/{}/output/{}.gd")
-        self.output_vcf_fmt = os.path.join(self.output, "{}/{}/output/{}.vcf")
+        self.output_gd_fmt = os.path.join(self.output, "{}/{}/output/output.gd")
+        self.output_vcf_fmt = os.path.join(self.output, "{}/{}/output/output.vcf")
 
         #Logs:
         self.logs = logs

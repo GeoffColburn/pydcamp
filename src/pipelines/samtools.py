@@ -33,3 +33,10 @@ def mpileup(fasta_path, bam_sorted_path, out_vcf_path):
     assert not os.system(cmd), "Command: {}".format(cmd)
     return out_vcf_path
 
+
+def faidx(fasta_path):
+    cmd = "samtools faidx {}".format(fasta_path)
+    print cmd
+    assert not os.system(cmd), "Command: {}".format(cmd)
+    return fasta_path
+

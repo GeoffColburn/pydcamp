@@ -31,3 +31,25 @@ def genome_diff_compare(output_path, ref_paths, gd_paths):
     os.system(cmd)
     return output_path
 
+def genome_diff_merge(gd_paths, output_gd_path):
+    cmd = "breseq merge -u -g {} -o {}".format(" -g ".join(gd_paths), output_gd_path)
+    print cmd
+    os.system(cmd)
+    return output_gd_path
+    
+def genome_diff_filter(gd_path, output_gd_path, filter_option):
+    filter_values = list()
+    mut_types = list()
+    if filter_option == "SNP":
+        filter_values = ['"QD < 2.0"', '"MQ < 40.0"', '"FS > 60.0"',\
+                         '"HaplotypeScore > 13.0"', '"MQRankSum < -12.5"', '"ReadPosRankSum < -8.0"']
+        mut_types = ["SNP"]
+    elif filter_option == "INDEL":
+        filter_values = ['"QD < 2.0"', '"ReadPosRankSum < -20.0"', '"InbreedingCoeff < -0.8"', '"FS > 200.0"']
+        mut_types = ["INS", "DEL"]
+    else:
+        assert 0
+    cmd = "breseq filter-gd -g {} -o {} -m {} {}".format(gd_path, output_gd_path, " -m ".join(mut_types), " ".join(filter_values))
+    print cmd
+    os.system(cmd)
+    return output_gd_path

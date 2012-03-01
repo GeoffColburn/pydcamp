@@ -5,13 +5,14 @@ import glob
 import shutil
 import argparse
 import string
+import pickle as p
 
 import breseq.command
 from breseq.genome_diff import GenomeDiff
 
-import extern.samtools as samtools
-import extern.gatk as gatk
-import extern.picardtools as picardtools
+import pipelines.samtools as samtools
+import pipelines.gatk as gatk
+import pipelines.picardtools as picardtools
 import pipelines.common
 
 from libdcamp.settings import Settings
@@ -98,7 +99,7 @@ def do_breakdancer(args):
         print "++Step 3 mutation predictions and output started."
         if not os.path.exists(step_3_dir): os.makedirs(step_3_dir)
 
-        """We need to change into the directory because breakdancer output's histogram
+        """We need to change into the directory because breakdancer outputs histogram
         files into the current working directory."""
         cwd = os.getcwd()
         os.chdir(step_3_dir)
@@ -137,40 +138,82 @@ def do_gatk(args):
 #Step 3
     step_3_dir = os.path.join(args.output_dir, "03_gatk")
     step_3_file = os.path.join(step_3_dir, "gatk.done")
+    realigned_bam_path = ""
     if not os.path.exists(step_3_file):
-        print "++Step 3 mutation predictions and output started."
+        print "++Gatk recalibration and realignment of reference alignment file."
         if not os.path.exists(step_3_dir):
             os.makedirs(step_3_dir)
             
+        #Step: Picard: Mark Duplicates.
+        dedup_bam_path = os.path.join(step_3_dir, "dedup.bam")
+        dedup_metrics_path = os.path.join(step_3_dir, "dedup.metrics")
+        picardtools.mark_duplicates(sorted_bam_path, dedup_bam_path, dedup_metrics_path)
+
         #Step: Samtools: Index BAM.
         index_done_file = os.path.join(step_3_dir, "index.done")
         if not os.path.exists(index_done_file):
-            sorted_bam_path = samtools.index(sorted_bam_path)
+            samtools.index(dedup_bam_path)
             open(index_done_file, 'w').close()
-        
-        #Step: Gatk: Intervals.
-        intervals_path = gatk.realigner_target_creator(fasta_path, sorted_bam_path)
-        
-        #Step: Gatk: Indel Realigner.
-        indel_realign_done_file = os.path.join(step_3_dir, "indel_realign.done")
-        realigned_bam_path = gatk.indel_realigner(fasta_path, sorted_bam_path, intervals_path)
+
+        #Step: Gatk Realign.
+        #Gatk: Intervals.
+        intervals_path = gatk.realigner_target_creator(fasta_path, dedup_bam_path)
+        #Gatk: Indel Realign.
+        realigned_bam_path = gatk.indel_realigner(fasta_path, dedup_bam_path, intervals_path)
+
+        #Step: Gatk Recal. ***May not be able to do due to need for dbSNP file.
+        #CountCovariates.
+        recal_csv_path = os.path.join(step_3_dir, "recal_data.csv")
+        gatk.count_covariates(fasta_path, realigned_bam_path, recal_csv_path)
+        #TableRecalibration.
+        recal_bam_path = os.path.join(step_3_dir, "recal.bam")
+        gatk.table_recalibration(fasta_path, realigned_bam_path, recal_csv_path, recal_bam_path)
         
         #Step: Picardtools: Validate alignment.
         #validate_alignment_done_file = os.path.join(step_3_dir, "validate_alignment.done")
         #if not os.path.exists(validate_alignment_done_file):
         #    picardtools.validate_alignment(realigned_bam_path)
         #    open(validate_alignment_done_file, 'w').close()
+        p.dump(realigned_bam_path, open(step_3_file, 'w'))
+    else:
+        realigned_bam_path = p.load(open(step_3_file, 'r'))
         
 #Gatk Output
 #Step 4
     output_dir = os.path.join(args.output_dir, "output")
-    vcf_path = os.path.join(output_dir, "output.vcf")
+    raw_vcf_path = os.path.join(output_dir, "output.vcf")
     gd_path = os.path.join(output_dir, "output.gd")
+    print "++Filtering poor values for SNPs and INDELs in output and converting vcf files to gd."
 
     if not os.path.exists(output_dir): os.makedirs(output_dir)
     
-    gatk.unified_genotyper(fasta_path, realigned_bam_path, vcf_path, args.glm_option)
-    breseq.command.vcf2gd(vcf_path, gd_path)
+    if not os.path.exists(raw_vcf_path):
+        gatk.unified_genotyper(fasta_path, realigned_bam_path, raw_vcf_path, args.glm_option)
+
+    vcf_paths = [raw_vcf_path] 
+    for filter_type in ["SNP", "INDEL"]:
+        filter_vcf_path = os.path.join(output_dir, "{}.vcf".format(filter_type))
+        gatk.variant_filtration_walker(fasta_path, raw_vcf_path, filter_vcf_path, filter_type) 
+        vcf_paths.append(filter_vcf_path)
+
+    gd_paths = list()
+    for vcf_path in vcf_paths:
+        gd_path = vcf_path.replace(".vcf", ".gd")
+        breseq.command.vcf2gd(vcf_path, gd_path)
+        if os.path.basename(gd_path) != "output.gd": 
+            gd_paths.append(gd_path)
+    
+    for gd_path in gd_paths:
+        mut_type = os.path.basename(gd_path).split('.')[0]
+        breseq.command.genome_diff_filter(gd_path, gd_path, mut_type)
+
+    output_gd_path = os.path.join(output_dir, "output.gd")
+    breseq.command.genome_diff_merge(gd_paths, output_gd_path)
+
+    pipelines.common.create_data_dir(args, fasta_path, realigned_bam_path)
+
+
+
 
 def do_create_simulated_gds(args):
 
@@ -245,7 +288,7 @@ def main():
     samtools_parser.add_argument("-a", action = "append", dest = "aln_paths", required = False)
     samtools_parser.add_argument("--pair-ended", action = "store_true", dest = "pair_ended", default = False)
     samtools_parser.add_argument("--sort_bam", action = "store_true", dest = "sort_bam", default = True)
-    samtools_parser.add_argument("read_paths", nargs = '+')
+    samtools_parser.add_argument("read_paths", nargs = '+', default = None)
     samtools_parser.set_defaults(func = do_samtools)
 
     #breakdancer.
@@ -265,7 +308,7 @@ def main():
     gatk_parser.add_argument("--glm", dest = "glm_option", default = "BOTH", choices = ["BOTH", "SNP", "INDEL"])
     gatk_parser.add_argument("--pair-ended", action = "store_true", dest = "pair_ended", default = False)
     gatk_parser.add_argument("--sort_bam", action = "store_true", dest = "sort_bam", default = True)
-    gatk_parser.add_argument("read_paths", nargs = '?', default = None)
+    gatk_parser.add_argument("read_paths", nargs = '+', default = None)
     gatk_parser.set_defaults(func = do_gatk)
 
     #create-simulated-gds

@@ -32,7 +32,7 @@ def indel_realigner(ref_path, bam_path, intervals_path):
     assert not os.system(cmd), "Command: {}".format(cmd)
     return realigned_bam_path
 
-def count_covariates(ref_path, bam_path):
+def count_covariates(ref_path, bam_path, out_recal_csv):
     cmd = "java -Xmx1g -jar {} \
           -T CountCovariates \
           -R {} \
@@ -42,10 +42,21 @@ def count_covariates(ref_path, bam_path):
           -cov QualityScoreCovariate \
           -cov CycleCovariate \
           -cov DinucCovariate \
-          -recalFile recal_data.csv \
+          -recalFile {} \
           --default_read_group 1 \
-          --default_platform illumina"\
-          .format(_GENOME_ANALYSIS_TK, ref_path, bam_path)
+          --default_platform illumina\
+          -run_without_dbsnp_potentially_ruining_quality"\
+          .format(_GENOME_ANALYSIS_TK, ref_path, bam_path, out_recal_csv)
+    print cmd
+    assert not os.system(cmd), "Command: {}".format(cmd)
+
+def table_recalibration(ref_path, bam_path, recal_csv_path, output_bam_path):
+    cmd = "java -jar {} \
+           -R {} \
+           -I {} \
+           -T TableRecalibration \
+           -o {} \
+           -recalFile {}".format(_GENOME_ANALYSIS_TK, ref_path, bam_path, output_bam_path, recal_csv_path)
     print cmd
     assert not os.system(cmd), "Command: {}".format(cmd)
 
@@ -60,5 +71,30 @@ def unified_genotyper(ref_path, bam_path, output_vcf_path, glm_option):
     print cmd
     assert not os.system(cmd), "Command: {}".format(cmd)
     return output_vcf_path
+
+def variant_filtration_walker(ref_path, vcf_path, output_vcf_path, filter_option):
+    filter_values = list()
+    if filter_option == "SNP":
+        #filter_values = ['"QD < 2.0"', '"MQ < 40.0"', '"FS > 60.0"', '"HaplotypeScore > 13.0"', '"MQRankSum < -12.5"', '"ReadPosRankSum < -8.0"']
+        #filter_values = ["QD < 2.0", "MQ < 40.0", "FS > 60.0", "HaplotypeScore > 13.0", "MQRankSum < -12.5", "ReadPosRankSum < -8.0"]
+        filter_values = ["QD < 2.0", "MQ < 40.0", "FS > 60.0", "HaplotypeScore > 13.0"]
+
+    elif filter_option == "INDEL":
+        filter_values = ["QD < 2.0", "FS > 200.0"]
+
+    else:
+        assert 0
+
+    cmd = 'java -Xmx2g -jar {} \
+          -R {} \
+          -T VariantFiltration \
+          -o {} \
+          --variant {} \
+          --filterExpression "{}" \
+          --filterName {}Filter'.format(_GENOME_ANALYSIS_TK, ref_path, output_vcf_path, vcf_path, " || ".join(filter_values), filter_option)
+    print cmd
+    assert not os.system(cmd), "Command: {}".format(cmd)
+
+
 
     

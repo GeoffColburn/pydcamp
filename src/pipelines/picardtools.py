@@ -6,17 +6,14 @@ _ADD_OR_REPLACE_READ_GROUPS = os.path.join(_PICARD_TOOLS_DIR, "AddOrReplaceReadG
 _MARK_DUPLICATES            = os.path.join(_PICARD_TOOLS_DIR, "MarkDuplicates.jar") 
 _VALIDATE_SAM_FILE          = os.path.join(_PICARD_TOOLS_DIR, "ValidateSamFile.jar") 
 _CREATE_SEQUENCE_DICTIONARY = os.path.join(_PICARD_TOOLS_DIR, "CreateSequenceDictionary.jar") 
+_SORT_SAM                   = os.path.join(_PICARD_TOOLS_DIR, "SortSam.jar")
 
-def mark_duplicates(bam_path):
-    output_dir = os.path.dirname(bam_path)
-    output_path = os.path.join(output_dir, "MarkDuplicatesOutput")
-    metric_path = os.path.join(output_dir, "MarkDuplicatesMetrics")
-    
+def mark_duplicates(bam_path, output_bam_path, output_metrics_path):
     cmd = "java -Xmx1g -jar {} \
           INPUT={} \
           OUTPUT={} \
           METRICS_FILE={}"\
-          .format(_MARK_DUPLICATES, bam_path, output_path, metric_path)
+          .format(_MARK_DUPLICATES, bam_path, output_bam_path, output_metrics_path)
     assert not os.system(cmd), "Command: {}".format(cmd) 
     return bam_path
 
@@ -34,3 +31,9 @@ def create_sequence_dictionary(ref_path, output_path):
     cmd = "java -jar {} R={} O={}".format(_CREATE_SEQUENCE_DICTIONARY, ref_path, output_path)
     assert not os.system(cmd), "Command: {}".format(cmd) 
     return output_path
+
+def sort_sam(aln_path, output_aln_path, sort_option = "coordinate"):
+    cmd = "java -jar {} INPUT={} OUTPUT={} SORT_ORDER={}".format(_SORT_SAM, aln_path, output_aln_path, sort_option)
+    assert not os.system(cmd), "Command: {}".format(cmd) 
+    return output_aln_path
+

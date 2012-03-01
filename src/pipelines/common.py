@@ -3,11 +3,12 @@
 import sys, os
 import argparse
 import pickle as p
+import shutil
 
 import breseq.command
-import extern.bwa as bwa
-import extern.samtools as samtools
-import extern.picardtools as picardtools
+import pipelines.bwa as bwa
+import pipelines.samtools as samtools
+import pipelines.picardtools as picardtools
 import libdcamp.common 
 
     
@@ -178,7 +179,7 @@ def sort_bams(bam_paths, output_dir):
         sorted_bam_paths.append(bam_sorted_path)
         if os.path.exists(bam_sorted_path): continue
         
-        samtools.sort(bam_path, bam_sorted_prefix)
+        picardtools.sort_sam(bam_path, bam_sorted_path, "coordinate")
     assert len(sorted_bam_paths)
     return sorted_bam_paths
 
@@ -194,16 +195,12 @@ def add_sequence_dict(ref_path, aln_path, output_dir):
     return output_path
 
 
-
-
-
-
 def prepare_reference(args, output_dir):
     step_1_dir  = os.path.join(args.output_dir, output_dir)
-    step_1_done_file = os.path.join(step_1_dir, "reference_conversion.done")
+    step_1_done_file = os.path.join(step_1_dir, "prepare_reference.done")
     fasta_path = ""
     if not os.path.exists(step_1_done_file):
-        print "++Step 1 reference conversion started."
+        print "++Preparing reference file."
         if not os.path.exists(step_1_dir): os.makedirs(step_1_dir)
         
         #Step: Convert Genbank files to Fasta files.
@@ -219,7 +216,7 @@ def prepare_reference(args, output_dir):
         p.dump(fasta_path, open(step_1_done_file, 'w'))
 
     else:
-        print "++Step 1 reference conversion already completed."
+        print "++Reference file has already been prepared."
         fasta_path = p.load(open(step_1_done_file, 'r'))
                 
     assert os.path.exists(fasta_path) and fasta_path.endswith(".fasta")
@@ -229,10 +226,10 @@ def prepare_reference(args, output_dir):
 
 def create_alignment(args, fasta_path, output_dir):
     step_2_dir = os.path.join(args.output_dir, output_dir)
-    step_2_done_file = os.path.join(step_2_dir, "reference_alignment.done")
+    step_2_done_file = os.path.join(step_2_dir, "create_alignment.done")
     sorted_bam_path = ""
     if not os.path.exists(step_2_done_file):
-        print "++Step 2 reference alignment started."
+        print "++Processing and creating reference alignment file."
         if not os.path.exists(step_2_dir): os.makedirs(step_2_dir)
 
         bam_paths = list()
@@ -283,10 +280,24 @@ def create_alignment(args, fasta_path, output_dir):
         p.dump(sorted_bam_path, open(step_2_done_file, 'w'))
         
     else:
-        print "++Step 2 reference alignment already completed."
+        print "++Reference alignment file has already been completed."
         sorted_bam_path = p.load(open(step_2_done_file, 'r'))
     assert os.path.exists(sorted_bam_path) and sorted_bam_path.endswith(".bam")
     
     return sorted_bam_path
 
+def create_data_dir(args, fasta_path, bam_path):
+    print "++Creating data directory for bam2aln processing."
+    data_dir = os.path.join(args.output_dir, "data")
+    if not os.path.exists(data_dir): os.makedirs(data_dir)
+
+    reference_fasta_path = os.path.join(data_dir, "reference.fasta")
+    if not os.path.exists(reference_fasta_path):
+        shutil.copy2(fasta_path, reference_fasta_path)
+        samtools.faidx(reference_fasta_path)
+
+    reference_bam_path = os.path.join(data_dir, "reference.bam")
+    if not os.path.exists(reference_bam_path):
+        shutil.copy2(bam_path, reference_bam_path)
+        samtools.index(reference_bam_path)
 
