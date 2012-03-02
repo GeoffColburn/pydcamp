@@ -28,10 +28,10 @@ def do_results(args):
     job.setup_paths_database()
 
     job.handle_gds()
+    job.commit_db()
     html_factory = HtmlFactory(job)
     html_factory.write_index_page(job.settings.results_index_pth)
     
-    job.commit_db()
 
 def do_create_alignment(args):
     fasta_path = pipelines.common.prepare_reference(args, "01_reference_conversion")
