@@ -20,11 +20,6 @@ class Job:
         NO_CONTROL = "NO_CONTROL"
         NO_REFERENCE_FILE = "NO_REFERENCE_FILE"
     
-    class VcfOption:
-        NONE   = ""
-        AF_100 = "--AF-100"
-        AF_099 = "--AF-099"
-
     def __init__(self, settings = Settings()): 
         self.settings = settings
         self.pipelines = list()
@@ -135,9 +130,10 @@ class Job:
 
 
     def handle_gds(self):
-        for test_gd_path in libdcamp.common.locate("output.gd", self.settings.output):
+        for test_gd_path in glob.glob(os.path.join(self.settings.output, "*/*/output/output.gd")):
             m = re.match(".*\/(?P<pipeline>\w+)\/(?P<run_name>\w+)\/output\/output\.gd\Z(?ms)", test_gd_path)
             if m:
+                print "+++{}::{}::{}".format(m.group("run_name"), m.group("run_name"), Job.Status.COMPLETED)
                 ctrl_gd_path = os.path.join(self.settings.data, "{}.gd".format(m.group("run_name")))
                 ref_seq_paths = GenomeDiff(ctrl_gd_path).ref_sequence_file_paths(self.settings.downloads)
                 
