@@ -119,6 +119,7 @@ class HtmlFactory:
             for pipeline in self.job.tables_in_db():
                 cur.execute("select * from {} where run_name = ?".format(pipeline), [run_name])
                 row = cur.fetchone()
+                print row[key]
                 gd = GenomeDiff(row[key])
                 header_info = gd.header_info()
                 assert "TP|FN|FP" in header_info.other
@@ -146,18 +147,6 @@ class HtmlFactory:
         page = self.create_validation_content(page, key = "comp_gd")
 
         open(path, 'w').write(str(page) + '\n')
-
-#    def create_index_page(self, path):
-#        page = markup.page()
-#        css = ["dcamp_style.css", "pro_dropdown_3/pro_dropdown_3.css"]
-#        script = {"pro_dropdown_3/stuHover.js":"javascript"}
-#        page.init(css = css, script = script)
-#
-#        page.div(class_ = "main_container")
-#        page = self.write_header(page)
-#        page.div.close()
-#
-#        open(path, 'w').write(str(page) + '\n')
 
 
     def create_validation_page(self, path, key = "", title = ""):
