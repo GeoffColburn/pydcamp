@@ -143,7 +143,7 @@ class HtmlFactory:
         css_path = os.path.relpath(css_path, self.job.settings.results)
         css = [css_path]
         page.init(css = css_path)
-        page = self.create_validation_content(page, key = "comp_norm_test_gd")
+        page = self.create_validation_content(page, key = "comp_gd")
 
         open(path, 'w').write(str(page) + '\n')
 

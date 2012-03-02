@@ -27,29 +27,9 @@ def do_results(args):
     job = Job(settings)
     job.setup_paths_database()
 
-    if args.action == "convert" or args.action == "process":
-        job.handle_breseq_orig_test_gds()
-        job.handle_test_vcfs()
-        job.handle_orig_ctrl_gds()
-        job.handle_convert_vcfs_to_gds(Job.VcfOption.NONE)          
-        job.handle_convert_vcfs_to_gds(Job.VcfOption.AF_099)    
-        job.handle_convert_vcfs_to_gds(Job.VcfOption.AF_100)            
-        job.handle_logs()
-
-    if args.action == "normalize" or args.action == "process":
-        job.handle_norm_ctrl_gds()
-        job.handle_norm_test_gds()
-
-    if args.action == "compare-validate" or args.action == "process":
-        job.handle_comp_orig_gds()
-        job.handle_comp_norm_gds()
-
-    if args.action == "compare-gds" or args.action == "process":
-        job.compare_gds()
-    
-    if args.action == "html-output" or args.action == "process":
-        html_factory = HtmlFactory(job)
-        html_factory.write_index_page(job.settings.results_index_pth)
+    job.handle_gds()
+    html_factory = HtmlFactory(job)
+    html_factory.write_index_page(job.settings.results_index_pth)
     
     job.commit_db()
 

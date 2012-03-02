@@ -36,6 +36,19 @@ class GenomeDiff:
             ret_val.append(os.path.basename(ref_seq))
         return ret_val
     
+    def ref_sequence_file_paths(self, downloads_dir = "02_Downloads"):
+        tokens = self._header_info.ref_seqs
+        ref_seq_paths = list()
+        for token in tokens:
+            kvp = token.split(":")
+            file_name = os.path.basename(kvp[1])
+            if not file_name.endswith(".gbk"):
+                file_name = "{}.gbk".format(file_name)
+            file_path = os.path.join(downloads_dir, file_name)
+            ref_seq_paths.append(file_path)
+        assert ref_seq_paths
+        return ref_seq_paths
+    
     def from_genome_diff_file(self, file_path):
         self._header_info.file_path = file_path
         self._header_info.file_name = os.path.basename(file_path)

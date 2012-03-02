@@ -31,7 +31,10 @@ class Settings:
         #Results:
         self.results = results
         #Results::Original
-        self.results_orig_test_vcf_fmt = os.path.join(self.results, "{}/{}/orig_test.vcf")
+        self.results_test_gd_fmt    = os.path.join(self.results, "{}/{}/test.gd")
+        self.results_ctrl_gd_fmt = os.path.join(self.results, "{}/{}/control.gd")
+        self.results_comp_gd_fmt    = os.path.join(self.results, "{}/{}/comp.gd")
+
         self.results_orig_test_gd_fmt = os.path.join(self.results, "{}/{}/orig_test.gd")
         self.results_orig_test_af_099_gd_fmt = os.path.join(self.results, "{}/{}/orig_test_af_099.gd")
         self.results_orig_test_af_100_gd_fmt = os.path.join(self.results, "{}/{}/orig_test_af_100.gd")

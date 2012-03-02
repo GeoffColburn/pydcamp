@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import os
+import os, fnmatch
 
 def merge_files(append_file_name, read_file_name):
     file1 = open(append_file_name, 'a')
@@ -19,3 +19,11 @@ def get_base_name(value):
 def GetRunName(value):
     value = get_base_name(value)
     return value.split('.')[0]
+
+
+def locate(pattern, root=os.curdir):
+    '''Locate all files matching supplied filename pattern in and below
+    supplied root directory.'''
+    for path, dirs, files in os.walk(os.path.abspath(root)):
+        for filename in fnmatch.filter(files, pattern):
+            yield os.path.relpath(os.path.join(path, filename))
