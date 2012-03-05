@@ -149,11 +149,6 @@ def do_gatk(args):
         recal_bam_path = os.path.join(step_3_dir, "recal.bam")
         gatk.table_recalibration(fasta_path, realigned_bam_path, recal_csv_path, recal_bam_path)
         
-        #Step: Picardtools: Validate alignment.
-        #validate_alignment_done_file = os.path.join(step_3_dir, "validate_alignment.done")
-        #if not os.path.exists(validate_alignment_done_file):
-        #    picardtools.validate_alignment(realigned_bam_path)
-        #    open(validate_alignment_done_file, 'w').close()
         p.dump(realigned_bam_path, open(step_3_file, 'w'))
     else:
         realigned_bam_path = p.load(open(step_3_file, 'r'))

@@ -133,7 +133,8 @@ class Job:
         for test_gd_path in glob.glob(os.path.join(self.settings.output, "*/*/output/output.gd")):
             m = re.match(".*\/(?P<pipeline>\w+)\/(?P<run_name>\w+)\/output\/output\.gd\Z(?ms)", test_gd_path)
             if m:
-                print "+++{}::{}::{}".format(m.group("run_name"), m.group("run_name"), Job.Status.COMPLETED)
+                print "+++{}::{}::{}".format(m.group("pipeline"), m.group("run_name"), Job.Status.COMPLETED)
+
                 ctrl_gd_path = os.path.join(self.settings.data, "{}.gd".format(m.group("run_name")))
                 ref_seq_paths = GenomeDiff(ctrl_gd_path).ref_sequence_file_paths(self.settings.downloads)
                 
@@ -150,7 +151,7 @@ class Job:
                 breseq.command.compare_gd(results_ctrl_gd_path, results_test_gd_path, results_comp_gd_path)
 
                 self.cur.execute("update {} set test_gd = ?, ctrl_gd = ?, comp_gd = ?, status = ? where run_name = ?"\
-                        .format(m.group("pipeline")), [results_test_gd_path, results_ctrl_gd_path, results_comp_gd_path,Job.Status.COMPLETED, m.group("run_name")])
+                        .format(m.group("pipeline")), [results_test_gd_path, results_ctrl_gd_path, results_comp_gd_path, Job.Status.COMPLETED, m.group("run_name")])
 
 
             

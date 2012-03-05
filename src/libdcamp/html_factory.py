@@ -84,8 +84,6 @@ class HtmlFactory:
         return page
 
     def create_validation_content(self, page, key = "", title = ""):
-        self.job.con.row_factory = sqlite3.Row
-        cur = self.job.con.cursor()
         page.div(id = "validation_table")
         #Table header.
         page.table()
@@ -117,13 +115,11 @@ class HtmlFactory:
             page.th(e.a(run_name, href = href))
             file_anchors = list()
             for pipeline in self.job.tables_in_db():
-                cur.execute("select * from {} where run_name = ?".format(pipeline), [run_name])
-                row = cur.fetchone()
-                try: 
-                    gd = GenomeDiff(row[key])
-                except:
-                    print pipeline, run_name, row[key]
-                    continue
+                self.job.cur.execute("select comp_gd from {} where run_name = ?"\
+                        .format(pipeline), [run_name])
+                gd_path, = self.job.cur.fetchone()
+                gd = GenomeDiff(gd_path)
+                print pipeline, run_name
                 header_info = gd.header_info()
                 assert "TP|FN|FP" in header_info.other
                 validation = header_info.other["TP|FN|FP"].split('|')
@@ -133,7 +129,7 @@ class HtmlFactory:
                 page.td(tp, class_ = "validation_table_column")
                 page.td(fn, class_ = "validation_table_column")
                 page.td(fp, class_ = "validation_table_last_column")
-                file_anchors.append(e.a(pipeline.capitalize(), href = os.path.join("..", row[key])))
+                file_anchors.append(e.a(pipeline.capitalize(), href = os.path.join("..", gd_path)))
             page.th("/".join(file_anchors))
 
             page.tr.close()
