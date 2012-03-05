@@ -119,7 +119,7 @@ class HtmlFactory:
                         .format(pipeline), [run_name])
                 value = self.job.cur.fetchone()
                 print value
-                if value == None:
+                if value == None or value == (None,):
                     page.td("-", class_ = "validation_table_column")
                     page.td("-", class_ = "validation_table_column")
                     page.td("-", class_ = "validation_table_last_column")
