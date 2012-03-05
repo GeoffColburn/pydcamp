@@ -67,7 +67,10 @@ def do_samtools(args):
         for filter_type in ["SNP", "INDEL"]:
             filter_gd_path = os.path.join(output_dir, "{}.gd".format(filter_type))
             breseq.command.genome_diff_filter(raw_gd_path, filter_gd_path, filter_type)
-            gd_paths.append(filter_gd_path)
+            if os.path.exists(filter_gd_path):
+                gd_paths.append(filter_gd_path)
+            else:
+                print "No filtered genome diff file created for mutation type: {}".format(filter_type)
 
         breseq.command.genome_diff_merge(gd_paths, output_gd_path)
 
