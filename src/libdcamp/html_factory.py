@@ -118,10 +118,11 @@ class HtmlFactory:
                 self.job.cur.execute("select comp_gd from {} where run_name = ?"\
                         .format(pipeline), [run_name])
                 value = self.job.cur.fetchone()
+                print value
                 if value == None:
-                    page.td(tp, class_ = "validation_table_column")
-                    page.td(fn, class_ = "validation_table_column")
-                    page.td(fp, class_ = "validation_table_last_column")
+                    page.td("-", class_ = "validation_table_column")
+                    page.td("-", class_ = "validation_table_column")
+                    page.td("-", class_ = "validation_table_last_column")
                     continue
 
                 gd_path = value[0]
