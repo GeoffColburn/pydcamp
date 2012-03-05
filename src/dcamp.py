@@ -57,22 +57,22 @@ def do_samtools(args):
         assert os.path.exists(vcf_path)
         
         #Step: Breseq: Convert VCF file to Genome Diff format.
-        if not os.path.exists(raw_gd_path):
-            breseq.command.vcf2gd(vcf_path, raw_gd_path)
-        assert os.path.exists(raw_gd_path)
+        if not os.path.exists(output_gd_path):
+            breseq.command.vcf2gd(vcf_path, output_gd_path)
+        assert os.path.exists(output_gd_path)
 
 
-        #Step: Breseq: Filter mutations into separate files.
-        gd_paths = list()
-        for filter_type in ["SNP", "INDEL"]:
-            filter_gd_path = os.path.join(output_dir, "{}.gd".format(filter_type))
-            breseq.command.genome_diff_filter(raw_gd_path, filter_gd_path, filter_type)
-            if os.path.exists(filter_gd_path):
-                gd_paths.append(filter_gd_path)
-            else:
-                print "No filtered genome diff file created for mutation type: {}".format(filter_type)
+        ##Step: Breseq: Filter mutations into separate files.
+        #gd_paths = list()
+        #for filter_type in ["SNP", "INDEL"]:
+        #    filter_gd_path = os.path.join(output_dir, "{}.gd".format(filter_type))
+        #    breseq.command.genome_diff_filter(raw_gd_path, filter_gd_path, filter_type)
+        #    if os.path.exists(filter_gd_path):
+        #        gd_paths.append(filter_gd_path)
+        #    else:
+        #        print "No filtered genome diff file created for mutation type: {}".format(filter_type)
 
-        breseq.command.genome_diff_merge(gd_paths, output_gd_path)
+        #breseq.command.genome_diff_merge(gd_paths, output_gd_path)
 
         pipelines.common.create_data_dir(args, fasta_path, sorted_bam_path)
     
