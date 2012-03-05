@@ -117,9 +117,9 @@ class HtmlFactory:
             for pipeline in self.job.tables_in_db():
                 self.job.cur.execute("select comp_gd from {} where run_name = ?"\
                         .format(pipeline), [run_name])
-                gd_path, = self.job.cur.fetchone()
+                gd_path = self.job.cur.fetchone()[0]
+                print pipeline, run_name, gd_path
                 gd = GenomeDiff(gd_path)
-                print pipeline, run_name
                 header_info = gd.header_info()
                 assert "TP|FN|FP" in header_info.other
                 validation = header_info.other["TP|FN|FP"].split('|')
