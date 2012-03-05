@@ -24,7 +24,7 @@ from libdcamp.job import Job
 def do_results(args):
     settings = Settings(args.data, args.downloads, args.output, args.logs, args.results)
     settings.create_results_dir()
-    job = Job(settings)
+    job = Job(settings, args)
     job.setup_paths_database()
 
     job.handle_gds()
@@ -41,14 +41,15 @@ def do_samtools(args):
     fasta_path = pipelines.common.prepare_reference(args, "01_reference_conversion")
     sorted_bam_path = pipelines.common.create_alignment(args, fasta_path, "02_reference_alignment")
 
-    step_3_dir = os.path.join(args.output_dir, "output")
-    step_3_file = os.path.join(step_3_dir, "output.done")
+    output_dir = os.path.join(args.output_dir, "output")
+    output_file = os.path.join(output_dir, "output.done")
 
-    vcf_path = os.path.join(step_3_dir, "output.vcf")
-    gd_path = os.path.join(step_3_dir, "output.gd")
-    if not os.path.exists(step_3_file):
+    vcf_path = os.path.join(output_dir, "raw.vcf")
+    raw_gd_path = os.path.join(output_dir, "raw.gd")
+    output_gd_path = os.path.join(output_dir, "output.gd")
+    if not os.path.exists(output_file):
         print "++Step 3 mutation predictions and output started."
-        if not os.path.exists(step_3_dir): os.makedirs(step_3_dir)
+        if not os.path.exists(output_dir): os.makedirs(output_dir)
             
         #Step: Samtools: Mutation prediction.
         if not os.path.exists(vcf_path):
@@ -56,9 +57,23 @@ def do_samtools(args):
         assert os.path.exists(vcf_path)
         
         #Step: Breseq: Convert VCF file to Genome Diff format.
-        if not os.path.exists(gd_path):
-            breseq.command.vcf2gd(vcf_path, gd_path)
-        assert os.path.exists(gd_path)
+        if not os.path.exists(raw_gd_path):
+            breseq.command.vcf2gd(vcf_path, raw_gd_path)
+        assert os.path.exists(raw_gd_path)
+
+
+        #Step: Breseq: Filter mutations into separate files.
+        gd_paths = list()
+        for filter_type in ["SNP", "INDEL"]:
+            filter_gd_path = os.path.join(output_dir, "{}.gd".format(filter_type))
+            breseq.command.genome_diff_filter(raw_gd_path, filter_gd_path, filter_type)
+            gd_paths.append(filter_gd_path)
+
+        breseq.command.genome_diff_merge(gd_paths, output_gd_path)
+
+        pipelines.common.create_data_dir(args, fasta_path, sorted_bam_path)
+    
+
 
 def do_breakdancer(args): 
     """Believe we need to keep all files in one directory, although it's not mentioned,
@@ -243,6 +258,7 @@ def main():
     results_parser.add_argument("--output",    dest = "output",    default = "03_Output")
     results_parser.add_argument("--logs",      dest = "logs",      default = "04_Logs")
     results_parser.add_argument("--results",   dest = "results",   default = "05_Results")
+    results_parser.add_argument("-f", action = "store_true",  dest = "force_overwite",   default = False)
     results_parser.add_argument("--action",    dest = "action",\
             default = "process", choices = ["convert", "normalize", "compare-validate", "process", "compare-gds", "html-output"])
     results_parser.set_defaults(func = do_results)

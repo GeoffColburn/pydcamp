@@ -20,8 +20,9 @@ class Job:
         NO_CONTROL = "NO_CONTROL"
         NO_REFERENCE_FILE = "NO_REFERENCE_FILE"
     
-    def __init__(self, settings = Settings()): 
+    def __init__(self, settings, args): 
         self.settings = settings
+        self.args = args
         self.pipelines = list()
 
         self.con = sqlite3.connect(self.settings.results_dcamp_paths_db_pth)
@@ -131,7 +132,7 @@ class Job:
 
     def handle_gds(self):
         for test_gd_path in glob.glob(os.path.join(self.settings.output, "*/*/output/output.gd")):
-            m = re.match(".*\/(?P<pipeline>\w+)\/(?P<run_name>\w+)\/output\/output\.gd\Z(?ms)", test_gd_path)
+            m = re.match("^.*\/(?P<pipeline>\w+)\/(?P<run_name>\w+)\/output\/output\.gd$", test_gd_path)
             if m:
                 print "+++{}::{}::{}".format(m.group("pipeline"), m.group("run_name"), Job.Status.COMPLETED)
 
@@ -140,15 +141,18 @@ class Job:
                 
                 #Normalize ctrl.
                 results_ctrl_gd_path = self.settings.results_ctrl_gd_fmt.format(m.group("pipeline"), m.group("run_name"))
-                breseq.command.normalize_gd(ctrl_gd_path, ref_seq_paths, results_ctrl_gd_path)
+                if self.args.force_overwite or not os.path.exists(results_ctrl_gd_path):
+                    breseq.command.normalize_gd(ctrl_gd_path, ref_seq_paths, results_ctrl_gd_path)
                 
                 #Normalize test.
                 results_test_gd_path = self.settings.results_test_gd_fmt.format(m.group("pipeline"), m.group("run_name"))
-                breseq.command.normalize_gd(test_gd_path, ref_seq_paths, results_test_gd_path)
+                if self.args.force_overwite or not os.path.exists(results_test_gd_path):
+                    breseq.command.normalize_gd(test_gd_path, ref_seq_paths, results_test_gd_path)
 
                 #Compare test versus ctrl.
                 results_comp_gd_path = self.settings.results_comp_gd_fmt.format(m.group("pipeline"), m.group("run_name"))
-                breseq.command.compare_gd(results_ctrl_gd_path, results_test_gd_path, results_comp_gd_path)
+                if self.args.force_overwite or not os.path.exists(results_comp_gd_path):
+                    breseq.command.compare_gd(results_ctrl_gd_path, results_test_gd_path, results_comp_gd_path)
 
                 self.cur.execute("update {} set test_gd = ?, ctrl_gd = ?, comp_gd = ?, status = ? where run_name = ?"\
                         .format(m.group("pipeline")), [results_test_gd_path, results_ctrl_gd_path, results_comp_gd_path, Job.Status.COMPLETED, m.group("run_name")])
