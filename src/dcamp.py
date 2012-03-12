@@ -27,13 +27,9 @@ from libdcamp.job import FileWrangler
 def do_results(args):
     settings = Settings(args)
 
-    if not os.path.exists(settings.job_dir):
-        os.makedirs(settings.job_dir)
 
     job = Job()
-    job.handle_gds(settings.output_paths, args.force_overwrite)
-
-    job_paths = [path.replace(settings.output, settings.job_dir) for path in settings.output_paths]
+    job_paths = job.handle_gds(settings.output_paths, args.force_overwrite)
 
     html_factory = HtmlFactory()
     html_factory.write_index_page(job_paths)

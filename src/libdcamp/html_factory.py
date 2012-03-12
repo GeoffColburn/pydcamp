@@ -90,13 +90,14 @@ class HtmlFactory:
         page.table()
         page.tr()
         page.th()#Empty one to offset run_names below it.
-        for job_id, run_id, path in wrangler:
+        job_ids = wrangler.job_ids()
+        for job_id in job_ids:
             page.th(job_id.capitalize(), class_ = "validation_table", colspan = 3)
         page.th()
         page.tr.close()
         page.tr()
         page.th("Name")
-        for i in wrangler:
+        for i in job_ids:
             page.th("TP")
             page.th("FN")
             page.th("FP")

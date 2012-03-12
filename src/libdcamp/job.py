@@ -33,6 +33,9 @@ class FileWrangler:
     def __iter__(self):
         return self.data.__iter__()
 
+    def job_ids(self):
+        return self.status_data.keys()
+
 
 
     
@@ -68,6 +71,9 @@ class Job:
 
         print "Starting pp with", job_server.get_ncpus(), "Workers"
 
+        if not os.path.exists(self.settings.job_dir):
+            os.makedirs(self.settings.job_dir)
+
         for job_id, run_id, test_gd in test_wrangler:
 
             ctrl_gd = self.settings.ctrl_gd_fmt.format(run_id)
@@ -80,6 +86,7 @@ class Job:
             #jobs.append(job)
             handle_gd(ctrl_gd, test_gd, ref_seqs, results, force_overwrite)
 
+        return [path.replace(self.settings.output, self.settings.job_dir) for path in paths]
 
 
 
