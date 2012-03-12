@@ -31,7 +31,14 @@ def do_results(args):
         os.makedirs(settings.job_dir)
 
     job = Job()
-    job.handle_gds(settings.job_paths, args.force_overwrite)
+    job.handle_gds(settings.output_paths, args.force_overwrite)
+
+    job_paths = [path.replace(settings.output, settings.job_dir) for path in settings.output_paths]
+
+    html_factory = HtmlFactory()
+    html_factory.write_index_page(job_paths)
+
+
 
 
 
@@ -285,7 +292,7 @@ def main():
     results_parser.add_argument("--logs",      dest = "logs",      default = "04_Logs")
     results_parser.add_argument("--results",   dest = "results",   default = "05_Results")
     results_parser.add_argument("--name",      dest = "name", required = True)
-    results_parser.add_argument("job_paths", nargs = '+')
+    results_parser.add_argument("output_paths", nargs = '+')
     results_parser.add_argument("-f", action = "store_true",  dest = "force_overwrite",   default = False)
     results_parser.add_argument("--action",    dest = "action",\
             default = "all", choices = ["gather", "process", "all"])

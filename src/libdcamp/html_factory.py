@@ -7,21 +7,21 @@ import extern.markup as markup
 from extern.markup import oneliner as e
 
 from breseq.genome_diff import GenomeDiff
-from libdcamp.job import Job
-
+from libdcamp.settings import Settings
+from libdcamp.job import FileWrangler
 
 
 class HtmlFactory:
 
-    def __init__(self, job):
-        self.job = job
+    def __init__(self):
+        self.settings = Settings.instance()
 
-    def copy_css_style(self, path):
-        shutil.copy2(self.job.settings.shared_css_style_pth, path)
-        return path
+    def copy_css_style(self):
+        if not os.path.exists(os.path.dirname(self.settings.job_css_path)):
+            os.makedirs(os.path.dirname(self.settings.job_css_path))
 
-
-
+        shutil.copy2(self.settings.shared_css_style_pth, self.settings.job_css_path)
+        return os.path.relpath(self.settings.job_css_path, self.settings.job_dir)
 
     def write_header(self, page):
         page.div(class_ = "header_container")
@@ -83,19 +83,20 @@ class HtmlFactory:
 
         return page
 
-    def create_validation_content(self, page, key = "", title = ""):
+    def create_validation_content(self, page, job_paths, key = "", title = ""):
+        wrangler = FileWrangler(job_paths, key)
         page.div(id = "validation_table")
         #Table header.
         page.table()
         page.tr()
         page.th()#Empty one to offset run_names below it.
-        for pipeline in self.job.tables_in_db():
-            page.th(pipeline.capitalize(), class_ = "validation_table", colspan = 3)
+        for job_id, run_id, path in wrangler:
+            page.th(job_id.capitalize(), class_ = "validation_table", colspan = 3)
         page.th()
         page.tr.close()
         page.tr()
         page.th("Name")
-        for pipeline in self.job.tables_in_db():
+        for i in wrangler:
             page.th("TP")
             page.th("FN")
             page.th("FP")
@@ -104,28 +105,19 @@ class HtmlFactory:
 
         #Table data.
         is_alt = False
-        for run_name in self.job.completed_run_names_in_db():
+        run_ids = [run_id for job_id, run_id, path in wrangler]
+        for run_id in run_ids:
             if is_alt:
                 page.tr(class_ = "alternate_row")
             else:
                 page.tr()
             is_alt = False if is_alt else True
-            href = os.path.relpath(self.job.settings.results_dcamp_genome_diff_compare_fmt.format(run_name),\
-                    self.job.settings.results)
-            page.th(e.a(run_name, href = href))
+            page.th(run_id)
             file_anchors = list()
-            for pipeline in self.job.tables_in_db():
-                self.job.cur.execute("select comp_gd from {} where run_name = ?"\
-                        .format(pipeline), [run_name])
-                value = self.job.cur.fetchone()
-                if value == None or value == (None,):
-                    page.td("-", class_ = "validation_table_column")
-                    page.td("-", class_ = "validation_table_column")
-                    page.td("-", class_ = "validation_table_last_column")
-                    continue
-
-                gd_path = value[0]
-                gd = GenomeDiff(gd_path)
+            job_ids = [(job_id, path) for job_id, _run_id, path in wrangler if _run_id == run_id]
+            for job_id, path in job_ids:
+                print path
+                gd = GenomeDiff(path)
                 header_info = gd.header_info()
                 assert "TP|FN|FP" in header_info.other
                 validation = header_info.other["TP|FN|FP"].split('|')
@@ -135,7 +127,7 @@ class HtmlFactory:
                 page.td(tp, class_ = "validation_table_column")
                 page.td(fn, class_ = "validation_table_column")
                 page.td(fp, class_ = "validation_table_last_column")
-                file_anchors.append(e.a(pipeline.capitalize(), href = os.path.join("..", gd_path)))
+                file_anchors.append(e.a(job_id.capitalize(), href = os.path.relpath(path, self.settings.job_dir)))
             page.th("/".join(file_anchors))
 
             page.tr.close()
@@ -143,15 +135,14 @@ class HtmlFactory:
         page.div.close()
         return page
 
-    def write_index_page(self, path):
+    def write_index_page(self, job_paths):
         page = markup.page()
-        css_path = self.copy_css_style(self.job.settings.results_dcamp_css_pth)
-        css_path = os.path.relpath(css_path, self.job.settings.results)
+        css_path = self.copy_css_style()
         css = [css_path]
         page.init(css = css_path)
-        page = self.create_validation_content(page, key = "comp_gd")
+        page = self.create_validation_content(page, job_paths, key = "comp.gd")
 
-        open(path, 'w').write(str(page) + '\n')
+        open(self.settings.job_index_path, 'w').write(str(page) + '\n')
 
 
     def create_validation_page(self, path, key = "", title = ""):

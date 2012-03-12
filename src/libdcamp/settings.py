@@ -15,13 +15,16 @@ class Settings:
         self.logs      = args.logs
         self.results   = args.results 
 
-        self.name      = args.name 
-        self.job_paths = args.job_paths
+        self.output_paths = args.output_paths
 
+        self.name      = args.name 
         self.job_dir = os.path.join(self.results, self.name)
+
 
         self.shared_dir_path = os.path.join(os.environ["HOME"], "local/share/dcamp")
         self.shared_css_style_pth = os.path.join(self.shared_dir_path, "dcamp/style.css")
+        self.job_css_path = os.path.join(self.job_dir, "dcamp/style.css")
+        self.job_index_path = os.path.join(self.job_dir, "index.html")
 
         #Data:
         self.data_ctrl_gd_fmt = os.path.join(self.data, "{}.gd")
@@ -81,25 +84,9 @@ class Settings:
     def JobPaths(job_id, run_id):
         settings = Settings.instance()
         dir = os.path.join(settings.job_dir, "{}/{}".format(job_id, run_id))
+        if not os.path.exists(dir):
+            os.makedirs(dir)
         return (os.path.join(dir, "ctrl.gd"), os.path.join(dir, "test.gd"), os.path.join(dir, "comp.gd"))
 
-        def makedirs(self):
-            if not os.path.exists(self.dir):
-                os.makedirs(self.dir)
-
-
-        def __iter__(self):
-            return self.data.__iter()
-
-
-    def create_results_dir(self):
-        #Pipeline directories
-        for path in glob.glob(os.path.join(self.output, '*/*')):
-            new_path = path.replace(self.output, self.results)
-            if not os.path.exists(new_path):
-                os.makedirs(new_path)
-        #Dcamp
-        if not os.path.exists(self.results_dcamp):
-            os.makedirs(self.results_dcamp)
 
 

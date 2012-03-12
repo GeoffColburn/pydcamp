@@ -17,12 +17,11 @@ from breseq.genome_diff import GenomeDiff
 
 
 class FileWrangler:
-    def __init__(self, key):
+    def __init__(self, paths, key):
         self.file_wrangle_fmt = os.path.join("{}/{}", key)
         self.data = list()
         self.status_data = defaultdict(dict)
-        settings = Settings.instance()
-        for job_path in settings.job_paths:
+        for job_path in paths:
             job_path = job_path.strip('/')
             assert not job_path in self.status_data
             for path in glob.glob(self.file_wrangle_fmt.format(job_path, '*')):
@@ -33,6 +32,10 @@ class FileWrangler:
 
     def __iter__(self):
         return self.data.__iter__()
+
+
+
+    
 
 
 def handle_gd(ctrl_gd, test_gd, ref_seqs, results, force_overwrite):
@@ -57,8 +60,8 @@ class Job:
         self.settings = Settings.instance()
 
 
-    def handle_gds(self, job_paths, force_overwrite):
-        test_wrangler = FileWrangler("output/output.gd")
+    def handle_gds(self, paths, force_overwrite):
+        test_wrangler = FileWrangler(paths, "output/output.gd")
         ppservers = ()
         job_server = pp.Server(ppservers=ppservers)
         jobs = list()
@@ -66,9 +69,6 @@ class Job:
         print "Starting pp with", job_server.get_ncpus(), "Workers"
 
         for job_id, run_id, test_gd in test_wrangler:
-            dir = os.path.join(self.settings.job_dir, "{}/{}".format(job_id, run_id))
-            if not os.path.exists(dir):
-                os.makedirs(dir)
 
             ctrl_gd = self.settings.ctrl_gd_fmt.format(run_id)
             ref_seqs = GenomeDiff(ctrl_gd).ref_sequence_file_paths(self.settings.downloads)
