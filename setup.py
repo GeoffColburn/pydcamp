@@ -5,7 +5,7 @@ from distutils.core import setup
 setup(name = "dcamp",
       package_dir = {'':"src"},
 
-      packages = ["extern", "breseq", "libdcamp", "pipelines"],
+      packages = ["extern", "breseq", "libdcamp", "pipelines", "extern/libpp"],
 
       scripts = ["src/dcamp.py",
                  "extern/breakdancer/cpp/breakdancer_max",

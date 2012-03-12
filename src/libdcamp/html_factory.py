@@ -118,7 +118,6 @@ class HtmlFactory:
                 self.job.cur.execute("select comp_gd from {} where run_name = ?"\
                         .format(pipeline), [run_name])
                 value = self.job.cur.fetchone()
-                print value
                 if value == None or value == (None,):
                     page.td("-", class_ = "validation_table_column")
                     page.td("-", class_ = "validation_table_column")
@@ -126,7 +125,6 @@ class HtmlFactory:
                     continue
 
                 gd_path = value[0]
-                print pipeline, run_name, gd_path
                 gd = GenomeDiff(gd_path)
                 header_info = gd.header_info()
                 assert "TP|FN|FP" in header_info.other

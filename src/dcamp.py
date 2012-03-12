@@ -17,21 +17,39 @@ import pipelines.common
 
 from libdcamp.settings import Settings
 from libdcamp.html_factory import HtmlFactory
+from libdcamp.file_factory import FileFactory
 from libdcamp.job import Job
+from libdcamp.job import FileWrangler 
 
 
                 
 def do_results(args):
-    settings = Settings(args.data, args.downloads, args.output, args.logs, args.results)
-    settings.create_results_dir()
-    job = Job(settings, args)
-    job.setup_paths_database()
+    settings = Settings(args)
 
-    job.handle_gds()
-    html_factory = HtmlFactory(job)
-    html_factory.write_index_page(job.settings.results_index_pth)
+    job = Job()
+    job.handle_gds(settings.job_paths, args.force_overwrite)
+
+
+
+
+
+    #job = Job(settings, args.test_jobs)
+    #if args.action == "all" or args.action == "gather":
+    #    settings.create_results_dir()
+    #    job.setup_paths_database()
+    #    job.handle_gds()
+    #    html_factory = HtmlFactory(job)
+    #    html_factory.write_index_page(job.settings.results_index_pth)
+    #    job.commit_db()
+
+    #if args.action == "all" or args.action == "process":
+    #    file_factory = FileFactory(settings)
+    #    file_factory.write_validation_table(settings.results_dcamp_validation_table_pth)
+
+    #return
+
+
     
-    job.commit_db()
 
 def do_create_alignment(args):
     fasta_path = pipelines.common.prepare_reference(args, "01_reference_conversion")
@@ -258,12 +276,14 @@ def main():
     results_parser = subparser.add_parser("results")
     results_parser.add_argument("--data",      dest = "data",      default = "01_Data")
     results_parser.add_argument("--downloads", dest = "downloads", default = "02_Downloads")
-    results_parser.add_argument("--output",    dest = "output",    default = "03_Output")
+    results_parser.add_argument("--output",    dest = "output",      default = "03_Output")
     results_parser.add_argument("--logs",      dest = "logs",      default = "04_Logs")
     results_parser.add_argument("--results",   dest = "results",   default = "05_Results")
-    results_parser.add_argument("-f", action = "store_true",  dest = "force_overwite",   default = False)
+    results_parser.add_argument("--name",      dest = "name", required = True)
+    results_parser.add_argument("job_paths", nargs = '+')
+    results_parser.add_argument("-f", action = "store_true",  dest = "force_overwrite",   default = False)
     results_parser.add_argument("--action",    dest = "action",\
-            default = "process", choices = ["convert", "normalize", "compare-validate", "process", "compare-gds", "html-output"])
+            default = "all", choices = ["gather", "process", "all"])
     results_parser.set_defaults(func = do_results)
 
     #create-alignment.
@@ -306,8 +326,8 @@ def main():
     gatk_parser.set_defaults(func = do_gatk)
 
     #create-simulated-gds
-    sim_gd_parser = subparser.add_parser("create-simulated-gds")
-    sim_gd_parser.add_argument("-g", dest = "genome_diff")
+    sim_gd_parser = subparser.add_parser("sim-gds")
+    sim_gd_parser.add_argument("-g", dest = "genome_diff", required = True)
     sim_gd_parser.add_argument("-r", dest = "ref_seq", default = "REL606.5.gbk")
     sim_gd_parser.add_argument("--quality-score", dest = "quality_score",\
             default = "all", choices = ["05", "10", "20", "40", "80"])
