@@ -7,6 +7,7 @@ import argparse
 import string
 import pickle as p
 
+
 import breseq.command
 from breseq.genome_diff import GenomeDiff
 
@@ -26,8 +27,12 @@ from libdcamp.job import FileWrangler
 def do_results(args):
     settings = Settings(args)
 
+    if not os.path.exists(settings.job_dir):
+        os.makedirs(settings.job_dir)
+
     job = Job()
     job.handle_gds(settings.job_paths, args.force_overwrite)
+
 
 
 

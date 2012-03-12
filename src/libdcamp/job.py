@@ -34,15 +34,6 @@ class FileWrangler:
     def __iter__(self):
         return self.data.__iter__()
 
-    #def exists(self, job_id, run_id):
-    #    assert run_id in self.job_data[job_id]
-    #    return os.path.exists(self.job_data[job_id][run_id])
-
-    #def runs_in(job_id):
-    #    return self.job_data[job_id].values()
-
-    #def jobs_in(run_id): 
-    #    return self.run_data[run_id].values()
 
 def handle_gd(ctrl_gd, test_gd, ref_seqs, results, force_overwrite):
     if force_overwrite or not os.path.exists(results[0]):
@@ -75,27 +66,20 @@ class Job:
         print "Starting pp with", job_server.get_ncpus(), "Workers"
 
         for job_id, run_id, test_gd in test_wrangler:
+            dir = os.path.join(self.settings.job_dir, "{}/{}".format(job_id, run_id))
+            if not os.path.exists(dir):
+                os.makedirs(dir)
+
             ctrl_gd = self.settings.ctrl_gd_fmt.format(run_id)
             ref_seqs = GenomeDiff(ctrl_gd).ref_sequence_file_paths(self.settings.downloads)
 
             results = Settings.JobPaths(job_id, run_id)
-            os.makedirs(results[0])
             #args = (ctrl_gd, test_gd, ref_seqs, results, force_overwrite,)
             #support_funcs = (breseq.command.normalize_gd,)
             #job = job_server.submit(handle_gd, args, support_funcs, ("os","breseq.command",))
             #jobs.append(job)
             handle_gd(ctrl_gd, test_gd, ref_seqs, results, force_overwrite)
 
-
-
-
-
-
-
-
-
-
-            #Job.handle_gd(ctrl_gd, test_gd, ref_seqs, results, force_overwrite)
 
 
 
