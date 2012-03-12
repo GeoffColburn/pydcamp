@@ -79,6 +79,7 @@ class Job:
             ref_seqs = GenomeDiff(ctrl_gd).ref_sequence_file_paths(self.settings.downloads)
 
             results = Settings.JobPaths(job_id, run_id)
+            os.makedirs(results[0])
             #args = (ctrl_gd, test_gd, ref_seqs, results, force_overwrite,)
             #support_funcs = (breseq.command.normalize_gd,)
             #job = job_server.submit(handle_gd, args, support_funcs, ("os","breseq.command",))
