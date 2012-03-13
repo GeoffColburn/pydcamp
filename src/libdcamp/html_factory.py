@@ -90,14 +90,13 @@ class HtmlFactory:
         page.table()
         page.tr()
         page.th()#Empty one to offset run_names below it.
-        job_ids = wrangler.job_ids()
-        for job_id in job_ids:
+        for job_id in wrangler.job_ids:
             page.th(job_id.capitalize(), class_ = "validation_table", colspan = 3)
         page.th()
         page.tr.close()
         page.tr()
         page.th("Name")
-        for i in job_ids:
+        for i in wrangler.job_ids:
             page.th("TP")
             page.th("FN")
             page.th("FP")
@@ -106,29 +105,37 @@ class HtmlFactory:
 
         #Table data.
         is_alt = False
-        run_ids = [run_id for job_id, run_id, path in wrangler]
-        for run_id in run_ids:
+
+        for run_id in wrangler.run_ids:
             if is_alt:
                 page.tr(class_ = "alternate_row")
             else:
                 page.tr()
             is_alt = False if is_alt else True
+
             page.th(run_id)
             file_anchors = list()
-            job_ids = [(job_id, path) for job_id, _run_id, path in wrangler if _run_id == run_id]
-            for job_id, path in job_ids:
-                print path
-                gd = GenomeDiff(path)
-                header_info = gd.header_info()
-                assert "TP|FN|FP" in header_info.other
-                validation = header_info.other["TP|FN|FP"].split('|')
-                tp = validation[0]
-                fn = validation[1]
-                fp = validation[2]
-                page.td(tp, class_ = "validation_table_column")
-                page.td(fn, class_ = "validation_table_column")
-                page.td(fp, class_ = "validation_table_last_column")
-                file_anchors.append(e.a(job_id.capitalize(), href = os.path.relpath(path, self.settings.job_dir)))
+            for job_id in wrangler.job_ids:
+                if wrangler.file_exists(job_id, run_id):
+                    path = wrangler.get_file(job_id, run_id)
+                    gd = GenomeDiff(path)
+                    header_info = gd.header_info()
+                    assert "TP|FN|FP" in header_info.other
+                    validation = header_info.other["TP|FN|FP"].split('|')
+                    tp = validation[0]
+                    fn = validation[1]
+                    fp = validation[2]
+                    page.td(tp, class_ = "validation_table_column")
+                    page.td(fn, class_ = "validation_table_column")
+                    page.td(fp, class_ = "validation_table_last_column")
+                    href = os.path.relpath(path, self.settings.job_dir)
+                    file_anchors.append(e.a(job_id.capitalize(), href = href))
+                else:
+                    page.td('-', class_ = "validation_table_column")
+                    page.td('-', class_ = "validation_table_column")
+                    page.td('-', class_ = "validation_table_last_column")
+
+
             page.th("/".join(file_anchors))
 
             page.tr.close()

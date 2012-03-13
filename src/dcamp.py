@@ -34,30 +34,9 @@ def do_results(args):
     html_factory = HtmlFactory()
     html_factory.write_index_page(job_paths)
 
+    return
 
 
-
-
-
-
-
-    #job = Job(settings, args.test_jobs)
-    #if args.action == "all" or args.action == "gather":
-    #    settings.create_results_dir()
-    #    job.setup_paths_database()
-    #    job.handle_gds()
-    #    html_factory = HtmlFactory(job)
-    #    html_factory.write_index_page(job.settings.results_index_pth)
-    #    job.commit_db()
-
-    #if args.action == "all" or args.action == "process":
-    #    file_factory = FileFactory(settings)
-    #    file_factory.write_validation_table(settings.results_dcamp_validation_table_pth)
-
-    #return
-
-
-    
 
 def do_create_alignment(args):
     fasta_path = pipelines.common.prepare_reference(args, "01_reference_conversion")
