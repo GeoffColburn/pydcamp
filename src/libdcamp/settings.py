@@ -25,6 +25,7 @@ class Settings:
         self.shared_css_style_pth = os.path.join(self.shared_dir_path, "dcamp/style.css")
         self.job_css_path = os.path.join(self.job_dir, "dcamp/style.css")
         self.job_index_path = os.path.join(self.job_dir, "index.html")
+        self.job_validation_table_path = os.path.join(self.job_dir, "dcamp/validation_table.txt")
 
         #Data:
         self.data_ctrl_gd_fmt = os.path.join(self.data, "{}.gd")

@@ -34,6 +34,9 @@ def do_results(args):
     html_factory = HtmlFactory()
     html_factory.write_index_page(job_paths)
 
+    file_factory = FileFactory()
+    file_factory.write_validation_table(job_paths)
+
     return
 
 
