@@ -56,14 +56,6 @@ class FileWrangler:
             return self.data_dict[job_id][run_id]
         else:
             return None
-        
-
-    
-
-
-
-    
-
 
 def handle_gd(ctrl_gd, test_gd, ref_seqs, results, force_overwrite):
     if force_overwrite or not os.path.exists(results[0]):
@@ -74,6 +66,8 @@ def handle_gd(ctrl_gd, test_gd, ref_seqs, results, force_overwrite):
     
     if force_overwrite or not os.path.exists(results[2]):
         breseq.command.compare_gd(results[0], results[1], results[2])
+
+    return results[2]
 
 class Job:
     class Status:
@@ -88,27 +82,48 @@ class Job:
 
 
     def handle_gds(self, paths, force_overwrite):
-        test_wrangler = FileWrangler(paths, "output/output.gd")
-        ppservers = ()
-        job_server = pp.Server(ppservers=ppservers)
-        jobs = list()
-
-        print "Starting pp with", job_server.get_ncpus(), "Workers"
-
+        wrangler = FileWrangler(paths, "output/output.gd")
+        
         if not os.path.exists(self.settings.job_dir):
             os.makedirs(self.settings.job_dir)
 
-        for job_id, run_id, test_gd in test_wrangler:
+        ppservers = ()
+        job_server = pp.Server(ppservers=ppservers)
+        support_funcs = (breseq.command.normalize_gd,)
+        support_mods = ("os", "breseq.command",)
+        jobs = list()
+        print "Starting pp with", job_server.get_ncpus(), "Workers"
 
+        for job_id, run_id, test_gd in wrangler:
+            print job_id, run_id, test_gd
             ctrl_gd = self.settings.ctrl_gd_fmt.format(run_id)
             ref_seqs = GenomeDiff(ctrl_gd).ref_sequence_file_paths(self.settings.downloads)
-
             results = Settings.JobPaths(job_id, run_id)
-            #args = (ctrl_gd, test_gd, ref_seqs, results, force_overwrite,)
-            #support_funcs = (breseq.command.normalize_gd,)
-            #job = job_server.submit(handle_gd, args, support_funcs, ("os","breseq.command",))
-            #jobs.append(job)
-            handle_gd(ctrl_gd, test_gd, ref_seqs, results, force_overwrite)
+            args = (ctrl_gd, test_gd, ref_seqs, results, force_overwrite,)
+            jobs.append(job_server.submit(handle_gd, args, support_funcs, support_mods))
+
+
+        #for job_id, run_id, test_gd in wrangler:
+
+        #ctrl_gd = self.settings.ctrl_gd_fmt.format(run_id)
+        #ref_seqs = GenomeDiff(ctrl_gd).ref_sequence_file_paths(self.settings.downloads)
+
+        #results = Settings.JobPaths(job_id, run_id)
+        #args = (ctrl_gd, test_gd, ref_seqs, results, force_overwrite,)
+        #support_funcs = (breseq.command.normalize_gd,)
+        #job = job_server.submit(handle_gd, args, support_funcs, ("os","breseq.command",))
+
+        #for job_id, run_id, test_gd in wrangler:
+
+        #    ctrl_gd = self.settings.ctrl_gd_fmt.format(run_id)
+        #    ref_seqs = GenomeDiff(ctrl_gd).ref_sequence_file_paths(self.settings.downloads)
+
+        #    results = Settings.JobPaths(job_id, run_id)
+        #    args = (ctrl_gd, test_gd, ref_seqs, results, force_overwrite,)
+        #    support_funcs = (breseq.command.normalize_gd,)
+        #    job = job_server.submit(handle_gd, args, support_funcs, ("os","breseq.command",))
+        #    jobs.append(job)
+        #    handle_gd(ctrl_gd, test_gd, ref_seqs, results, force_overwrite)
 
         return [path.replace(self.settings.output, self.settings.job_dir) for path in paths]
 
