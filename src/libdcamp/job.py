@@ -24,18 +24,21 @@ def handle_gd(ctrl_gd, test_gd, ref_seqs, results, force_overwrite):
 
     return results[2]
 
-def handle_gds(paths, force_overwrite):
+
+def handle_gds(test_paths, force_overwrite):
     settings = Settings.instance()
-    wrangler = FileWrangler(paths, "output/output.gd")
+    wrangler = FileWrangler(test_paths, "output/output.gd")
     
     if not os.path.exists(settings.job_dir):
         os.makedirs(settings.job_dir)
 
+    job_paths = list()
     for job_id, run_id, test_gd in wrangler:
         ctrl_gd = settings.ctrl_gd_fmt.format(run_id)
         ref_seqs = GenomeDiff(ctrl_gd).ref_sequence_file_paths(settings.downloads)
 
-        results = Settings.JobPaths(job_id, run_id)
+        results = settings.job_paths(job_id, run_id)
         handle_gd(ctrl_gd, test_gd, ref_seqs, results, force_overwrite)
+        job_paths.append(results[3])
 
-    return [path.replace(settings.output, settings.job_dir) for path in paths]
+    return job_paths

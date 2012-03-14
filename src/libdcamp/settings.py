@@ -46,13 +46,12 @@ class Settings:
         assert Settings.__instance != None
         return Settings.__instance
     
-    @staticmethod
-    def JobPaths(job_id, run_id):
-        settings = Settings.instance()
-        dir = os.path.join(settings.job_dir, "{}/{}".format(job_id, run_id))
+    def job_paths(self, job_id, run_id):
+        dir = os.path.join(self.job_dir, "{}/{}".format(job_id, run_id))
+        job_path = os.path.join(self.job_dir, job_id)
         if not os.path.exists(dir):
             os.makedirs(dir)
-        return (os.path.join(dir, "ctrl.gd"), os.path.join(dir, "test.gd"), os.path.join(dir, "comp.gd"))
+        return (os.path.join(dir, "ctrl.gd"), os.path.join(dir, "test.gd"), os.path.join(dir, "comp.gd"), job_path)
 
 
 

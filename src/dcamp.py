@@ -36,8 +36,6 @@ def do_results(args):
 
     return
 
-
-
 def do_create_alignment(args):
     fasta_path = pipelines.common.prepare_reference(args, "01_reference_conversion")
     sorted_bam_path = pipelines.common.create_alignment(args, fasta_path, "02_reference_alignment")
@@ -65,19 +63,6 @@ def do_samtools(args):
         if not os.path.exists(output_gd_path):
             breseq.command.vcf2gd(vcf_path, output_gd_path)
         assert os.path.exists(output_gd_path)
-
-
-        ##Step: Breseq: Filter mutations into separate files.
-        #gd_paths = list()
-        #for filter_type in ["SNP", "INDEL"]:
-        #    filter_gd_path = os.path.join(output_dir, "{}.gd".format(filter_type))
-        #    breseq.command.genome_diff_filter(raw_gd_path, filter_gd_path, filter_type)
-        #    if os.path.exists(filter_gd_path):
-        #        gd_paths.append(filter_gd_path)
-        #    else:
-        #        print "No filtered genome diff file created for mutation type: {}".format(filter_type)
-
-        #breseq.command.genome_diff_merge(gd_paths, output_gd_path)
 
         pipelines.common.create_data_dir(args, fasta_path, sorted_bam_path)
     
@@ -132,13 +117,12 @@ def do_breakdancer(args):
     shutil.copy2(cfg_path, new_cfg_path )
     shutil.copy2(ctx_path, new_ctx_path )
 
-
-
 def do_gatk(args):
     fasta_path = pipelines.common.prepare_reference(args, "01_reference_conversion")
     sorted_bam_path = pipelines.common.create_alignment(args, fasta_path, "02_reference_alignment")
-#Gatk
-#Step 3
+
+    #Gatk
+    #Step 3
     step_3_dir = os.path.join(args.output_dir, "03_gatk")
     step_3_file = os.path.join(step_3_dir, "gatk.done")
     realigned_bam_path = ""
@@ -176,8 +160,8 @@ def do_gatk(args):
     else:
         realigned_bam_path = p.load(open(step_3_file, 'r'))
         
-#Gatk Output
-#Step 4
+    #Gatk Output
+    #Step 4
     output_dir = os.path.join(args.output_dir, "output")
     raw_vcf_path = os.path.join(output_dir, "output.vcf")
     gd_path = os.path.join(output_dir, "output.gd")
@@ -211,10 +195,7 @@ def do_gatk(args):
     pipelines.common.create_data_dir(args, fasta_path, realigned_bam_path)
 
 
-
-
 def do_create_simulated_gds(args):
-
     quality_scores = list()
     if args.quality_score == "all" or args.quality_score == "05": quality_scores.append("05")
     if args.quality_score == "all" or args.quality_score == "10": quality_scores.append("10")
@@ -247,7 +228,7 @@ def do_create_simulated_gds(args):
         for line in lines:
             fout.write(line)
 
-def do_testing(args):
+def do_test(args):
     gd = GenomeDiff(args.genome_diff)
 
     print gd.header_info().other
@@ -322,11 +303,10 @@ def main():
     sim_gd_parser.add_argument("--read-prefix", dest = "read_prefix", default = "genomes/simulated")
     sim_gd_parser.set_defaults(func = do_create_simulated_gds)
 
-
     #testing
-    testing_parser = subparser.add_parser("testing")
+    testing_parser = subparser.add_parser("test")
     testing_parser.add_argument("-g", dest = "genome_diff")
-    testing_parser.set_defaults(func = do_testing)
+    testing_parser.set_defaults(func = do_test)
 
 
 

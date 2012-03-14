@@ -12,18 +12,6 @@ class FileFactory:
     def __init__(self):
         self.settings = Settings.instance()
 
-    def collect_gd_data(self, key = "comp.gd"):
-        ret_val = defaultdict(dict)
-        for gd_path in glob.glob(os.path.join(self.settings.results, "*/*/{}".format(key))):
-            #m = re.match("^.*\/(?P<pipeline>\w+)\/(?P<run_name>\w+)\/comp\.gd$", gd_path)
-            m = re.match(r"^.*/(?P<pipeline>\w+)/(?P<run_name>\w+)/{}$".format(key), gd_path)
-            if m:
-                print gd_path
-                ret_val[m.group("run_name")][m.group("pipeline")] = gd_path
-
-        return ret_val
-
-
     def write_validation_table(self, job_paths): 
         table = open(self.settings.job_validation_table_path, 'w')
         table.write("run_name\tpipeline\tTP\tFN\tFP\n")
