@@ -9,28 +9,28 @@ class Settings:
 
         assert Settings.__instance == None
 
-        self.data      = args.data
-        self.downloads = args.downloads
-        self.output    = args.output
-        self.logs      = args.logs
-        self.results   = args.results 
+        #Directories setup for dcamp.
+        self.data      = args.data       #Holds control gds.
+        self.downloads = args.downloads  #Holds Genbank and Fastq files.
+        self.output    = args.output     #Holds output from pipeline runs, contains test gds.
+        self.logs      = args.logs       #Holds sterr/stdout logs from pipelines runs.
+        self.results   = args.results    #Holds post-pipeline job analysis files.
+        
+        #Output directories from pipelines.
+        self.test_paths = args.test_paths 
 
-        self.output_paths = args.output_paths
-
-        self.name      = args.name 
-        self.job_dir = os.path.join(self.results, self.name)
-
-
-        self.shared_dir_path = os.path.join(os.environ["HOME"], "local/share/dcamp")
-        self.shared_css_style_pth = os.path.join(self.shared_dir_path, "dcamp/style.css")
+        #Paths for this job, which will be put in the results directory.
+        self.job_name = args.job_name 
+        self.job_dir = os.path.join(self.results, self.job_name)
         self.job_css_path = os.path.join(self.job_dir, "dcamp/style.css")
         self.job_index_path = os.path.join(self.job_dir, "index.html")
         self.job_validation_table_path = os.path.join(self.job_dir, "dcamp/validation_table.txt")
 
-        #Data:
-        self.data_ctrl_gd_fmt = os.path.join(self.data, "{}.gd")
-        self.ctrl_gd_fmt = os.path.join(self.data, "{}.gd")
+        self.shared_dir_path = os.path.join(os.environ["HOME"], "local/share/dcamp")
+        self.shared_css_style_pth = os.path.join(self.shared_dir_path, "dcamp/style.css")
 
+        #Data:
+        self.ctrl_gd_fmt = os.path.join(self.data, "{}.gd")
 
         #Output:
         self.output_gd_fmt = os.path.join(self.output, "{}/{}/output/output.gd")
@@ -38,41 +38,6 @@ class Settings:
 
         #Logs:
         self.logs_log_fmt = os.path.join(self.logs, "{}/{}.log.txt")
-
-        #Results::Original
-        self.results_test_gd_fmt    = os.path.join(self.results, "{}/{}/test.gd")
-        self.results_ctrl_gd_fmt = os.path.join(self.results, "{}/{}/control.gd")
-        self.results_comp_gd_fmt    = os.path.join(self.results, "{}/{}/comp.gd")
-
-        self.results_orig_test_gd_fmt = os.path.join(self.results, "{}/{}/orig_test.gd")
-        self.results_orig_test_af_099_gd_fmt = os.path.join(self.results, "{}/{}/orig_test_af_099.gd")
-        self.results_orig_test_af_100_gd_fmt = os.path.join(self.results, "{}/{}/orig_test_af_100.gd")
-        self.results_orig_ctrl_gd_fmt = os.path.join(self.results, "{}/{}/orig_ctrl.gd")
-        self.results_log_fmt = os.path.join(self.results, "{}/{}/log.txt")
-        self.results_error_log_fmt = os.path.join(self.results, "{}/{}/error_log.txt")
-        #Results::Normalized
-        self.results_norm_test_gd_fmt = os.path.join(self.results, "{}/{}/norm_test.gd")
-        self.results_norm_test_af_099_gd_fmt = os.path.join(self.results, "{}/{}/norm_test_af_099.gd")
-        self.results_norm_test_af_100_gd_fmt = os.path.join(self.results, "{}/{}/norm_test_af_100.gd")
-        self.results_norm_ctrl_gd_fmt = os.path.join(self.results, "{}/{}/norm_ctrl.gd")
-        #Results::Compared
-        self.results_comp_orig_test_gd_fmt = os.path.join(self.results, "{}/{}/comp_orig_test.gd")
-        self.results_comp_orig_test_af_099_gd_fmt = os.path.join(self.results, "{}/{}/comp_orig_test_af_099.gd")
-        self.results_comp_orig_test_af_100_gd_fmt = os.path.join(self.results, "{}/{}/comp_orig_test_af_100.gd")
-        self.results_comp_norm_test_gd_fmt = os.path.join(self.results, "{}/{}/comp_norm_test.gd")
-        self.results_comp_norm_test_af_099_gd_fmt = os.path.join(self.results, "{}/{}/comp_norm_test_af_099.gd")
-        self.results_comp_norm_test_af_100_gd_fmt = os.path.join(self.results, "{}/{}/comp_norm_test_af_100.gd")
-        #Results::Dcamp
-        self.results_dcamp = os.path.join(self.results, "dcamp")
-        self.results_index_pth = os.path.join(self.results, "index.html")
-        self.results_dcamp_validation_table_pth = os.path.join(self.results_dcamp, "validation_table.txt")
-        self.results_dcamp_paths_db_pth = os.path.join(self.results_dcamp, "paths.db")
-        self.results_dcamp_css_pth = os.path.join(self.results_dcamp, "style.css")
-        self.results_dcamp_validation_pth = os.path.join(self.results_dcamp, "validation.html")
-        self.results_dcamp_prediction_pth = os.path.join(self.results_dcamp, "prediction.html")
-        self.results_dcamp_genome_diff_compare_fmt = os.path.join(self.results_dcamp, "{}.html")
-
-
 
         Settings.__instance = self
 

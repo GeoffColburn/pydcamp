@@ -8,7 +8,7 @@ from extern.markup import oneliner as e
 
 from breseq.genome_diff import GenomeDiff
 from libdcamp.settings import Settings
-from libdcamp.job import FileWrangler
+from libdcamp.file_wrangler import FileWrangler
 
 
 class HtmlFactory:

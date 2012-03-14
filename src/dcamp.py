@@ -19,17 +19,14 @@ import pipelines.common
 from libdcamp.settings import Settings
 from libdcamp.html_factory import HtmlFactory
 from libdcamp.file_factory import FileFactory
-from libdcamp.job import Job
-from libdcamp.job import FileWrangler 
+import libdcamp.job as job
 
 
                 
 def do_results(args):
     settings = Settings(args)
 
-
-    job = Job()
-    job_paths = job.handle_gds(settings.output_paths, args.force_overwrite)
+    job_paths = job.handle_gds(settings.test_paths, args.force_overwrite)
 
     html_factory = HtmlFactory()
     html_factory.write_index_page(job_paths)
@@ -269,11 +266,9 @@ def main():
     results_parser.add_argument("--output",    dest = "output",      default = "03_Output")
     results_parser.add_argument("--logs",      dest = "logs",      default = "04_Logs")
     results_parser.add_argument("--results",   dest = "results",   default = "05_Results")
-    results_parser.add_argument("--name",      dest = "name", required = True)
-    results_parser.add_argument("output_paths", nargs = '+')
+    results_parser.add_argument("--name",      dest = "job_name", required = True)
+    results_parser.add_argument("test_paths", nargs = '+')
     results_parser.add_argument("-f", action = "store_true",  dest = "force_overwrite",   default = False)
-    results_parser.add_argument("--action",    dest = "action",\
-            default = "all", choices = ["gather", "process", "all"])
     results_parser.set_defaults(func = do_results)
 
     #create-alignment.

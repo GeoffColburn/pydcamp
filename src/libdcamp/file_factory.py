@@ -6,7 +6,7 @@ from collections import defaultdict
 
 from libdcamp.settings import Settings
 from breseq.genome_diff import GenomeDiff
-from libdcamp.job import FileWrangler
+from libdcamp.file_wrangler import FileWrangler
 
 class FileFactory:
     def __init__(self):
