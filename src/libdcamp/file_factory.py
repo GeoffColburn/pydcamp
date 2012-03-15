@@ -14,9 +14,9 @@ class FileFactory:
         self.settings = Settings.instance()
 
     def write_validation_table(self, job_paths): 
-        print "*** Writing {}".format(self.settings.job_validation_table_path)
+        print "***Writing {}".format(self.settings.job_validation_table_path)
         table = open(self.settings.job_validation_table_path, 'w')
-        table.write("run_name\tpipeline\tTP\tFN\tFP\n")
+        table.write("run_id\tjob_id\tTP\tFN\tFP\n")
 
         wrangler = FileWrangler(job_paths, "comp.gd")
 
@@ -35,11 +35,12 @@ class FileFactory:
         table.close()
 
     def write_mutation_rates_table(self, job_paths):
-        print "*** Writing {}".format(self.settings.job_mutation_rates_table_path)
+        verbose = True
+        print "***Writing {}".format(self.settings.job_mutation_rates_table_path)
         table = open(self.settings.job_mutation_rates_table_path, 'w')
 
         mut_types = [type for type in DiffEntry.line_specs if len(type) == 3]
-        table.write("run_name\tpipeline\t{}\n".format("\t".join(mut_types)))
+        table.write("run_id\tjob_id\t{}\n".format("\t".join(mut_types)))
 
         wrangler = FileWrangler(job_paths, "comp.gd")
         for run_id in wrangler.run_ids:
@@ -61,12 +62,20 @@ class FileFactory:
                         n_fn = float(len([mut for mut in gd[mut_type] if "validation" in mut and mut["validation"] == "FN"]))
                         n_fp = float(len([mut for mut in gd[mut_type] if "validation" in mut and mut["validation"] == "FP"]))
                         total = float(n_tp + n_fn + n_fp)
+                        value = ""
                         if total:
                             tdr = float(n_tp / total) * 100.0
                             tdr = round(tdr, 1)
-                            table.write("\t{}".format(tdr))
+                            value = tdr
                         else:
-                            table.write("\t-")
+                            value = '-'
+
+                        table.write("\t{}".format(value))
+
+                        if verbose: 
+                            print "\t\t[mut_type]:", mut_type
+                            print "\t\t[tdr]:", value
+                            print ""
                         
                 else:
                     for i in mut_types:
