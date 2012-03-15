@@ -33,6 +33,7 @@ def do_results(args):
 
     file_factory = FileFactory()
     file_factory.write_validation_table(job_paths)
+    file_factory.write_mutation_rates_table(job_paths)
 
     return
 

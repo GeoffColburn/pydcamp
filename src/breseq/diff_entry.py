@@ -108,11 +108,11 @@ class DiffEntry(dict):
         return self._evidence
     
     #Methods
-    def IsMutation(self):
+    def is_mutation(self):
         return len(self.type()) == 3
-    def IsEvidence(self):
+    def is_evidence(self):
         return len(self.type()) == 2
-    def IsValidation(self):
+    def is_validation(self):
         return len(self.type()) == 4
 
 class DiffEntryList(list):
@@ -132,19 +132,19 @@ class DiffEntryList(list):
     def Mutations(self):
         ret_val = DiffEntryList()
         for de in self:
-            if de.IsMutation():
+            if de.is_mutation():
                 ret_val.append(de)
         return ret_val      
     def Evidence(self):
         ret_val = DiffEntryList()
         for de in self:
-            if de.IsEvidence():
+            if de.is_evidence():
                 ret_val.append(de)
         return ret_val      
     def Validations(self):
         ret_val = DiffEntryList()
         for de in self:
-            if de.IsValidation():
+            if de.is_validation():
                 ret_val.append(de)
         return ret_val    
     

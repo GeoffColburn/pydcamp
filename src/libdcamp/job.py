@@ -1,11 +1,9 @@
 #!/usr/bin/env python
 import sys, os
-import glob
-import re
-from collections import defaultdict
+import multiprocessing
+from multiprocessing import Pool
 
 import breseq.command
-
 from breseq.genome_diff import GenomeDiff
 
 from libdcamp.settings import Settings
@@ -31,6 +29,19 @@ def handle_gds(test_paths, force_overwrite):
     
     if not os.path.exists(settings.job_dir):
         os.makedirs(settings.job_dir)
+
+    #pool = Pool(multiprocessing.cpu_count())
+    #job_paths = list()
+    #args = list()
+    #for job_id, run_id, test_gd in wrangler:
+    #    ctrl_gd = settings.ctrl_gd_fmt.format(run_id)
+    #    ref_seqs = GenomeDiff(ctrl_gd).ref_sequence_file_paths(settings.downloads)
+
+    #    results = settings.job_paths(job_id, run_id)
+    #    args.append((ctrl_gd, test_gd, ref_seqs, results, force_overwrite))
+    #    job_paths.append(results[3])
+    #
+    #pool.map(handle_gd, args)
 
     job_paths = list()
     for job_id, run_id, test_gd in wrangler:

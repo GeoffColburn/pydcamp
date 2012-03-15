@@ -20,10 +20,13 @@ class GenomeDiff:
     #Constructors:
     def __init__(self): pass
     
-    def __init__(self, file_path):
+    def __init__(self, file_path, header_only = False):
         self._header_info = HeaderInfo()
         self._entry_list = DiffEntryList()
-        self.from_genome_diff_file(file_path)
+        self.from_genome_diff_file(file_path, header_only)
+
+    def __getitem__(self, type):
+        return self._entry_list[type]
         
     #Getters.
     def entry_list(self):
@@ -49,7 +52,7 @@ class GenomeDiff:
         assert ref_seq_paths
         return ref_seq_paths
     
-    def from_genome_diff_file(self, file_path):
+    def from_genome_diff_file(self, file_path, header_only):
         self._header_info.file_path = file_path
         self._header_info.file_name = os.path.basename(file_path)
         self._header_info.run_name  = os.path.basename(file_path).split('.')[0] 
@@ -76,6 +79,8 @@ class GenomeDiff:
                     value = " ".join(tokens) if len(tokens) > 0 else "?"
                     self._header_info.other[key] = value
             line = fp.readline()
+
+        if header_only: return
                 
         #Handle diff entries.
         for line in lines:

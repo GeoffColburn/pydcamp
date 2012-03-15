@@ -58,7 +58,7 @@ class HtmlFactory:
             for job_id in wrangler.job_ids:
                 if wrangler.file_exists(job_id, run_id):
                     path = wrangler.get_file(job_id, run_id)
-                    gd = GenomeDiff(path)
+                    gd = GenomeDiff(path, header_only = True)
                     header_info = gd.header_info()
                     assert "TP|FN|FP" in header_info.other
                     validation = header_info.other["TP|FN|FP"].split('|')

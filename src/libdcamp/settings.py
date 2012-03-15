@@ -25,6 +25,7 @@ class Settings:
         self.job_css_path = os.path.join(self.job_dir, "dcamp/style.css")
         self.job_index_path = os.path.join(self.job_dir, "index.html")
         self.job_validation_table_path = os.path.join(self.job_dir, "dcamp/validation_table.txt")
+        self.job_mutation_rates_table_path = os.path.join(self.job_dir, "dcamp/mutation_rates.txt")
 
         self.shared_dir_path = os.path.join(os.environ["HOME"], "local/share/dcamp")
         self.shared_css_style_pth = os.path.join(self.shared_dir_path, "dcamp/style.css")
