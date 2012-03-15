@@ -24,6 +24,7 @@ def handle_gd(ctrl_gd, test_gd, ref_seqs, results, force_overwrite):
 
 
 def handle_gds(test_paths, force_overwrite):
+    print "***Begin normalizing and comparing genome diffs."
     settings = Settings.instance()
     wrangler = FileWrangler(test_paths, "output/output.gd")
     
@@ -52,4 +53,5 @@ def handle_gds(test_paths, force_overwrite):
         handle_gd(ctrl_gd, test_gd, ref_seqs, results, force_overwrite)
         job_paths.append(results[3])
 
+    print "***End normalizing and comparing genome diffs."
     return job_paths

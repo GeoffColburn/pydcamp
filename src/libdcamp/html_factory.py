@@ -84,6 +84,7 @@ class HtmlFactory:
         return page
 
     def write_index_page(self, job_paths):
+        print "*** Writing {}".format(self.settings.job_index_path)
         page = markup.page()
         css_path = self.copy_css_style(self.settings.job_index_path)
         css = [css_path]
