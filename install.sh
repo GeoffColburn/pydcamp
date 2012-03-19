@@ -9,22 +9,22 @@ else
 fi
 
 #Samtool-0.1.18, newest version.
-if [ ! -f "extern/samtools-0.1.18/samtools-0.1.18" ]; then
+if [ -z $(which samtools-0.1.18) ]; then
   pushd extern/samtools-0.1.18/; 
   make
   mv samtools samtools-0.1.18
   popd
 else
-  echo "Samtools-0.1.18 already compiled."
+  echo "Samtools-0.1.18 already installed."
 fi
 
 #Freebayes.
-if [ ! -f "extern/freebayes/bin/freebayes" ]; then
+if [ -z $(which freebayes) ]; then
   pushd extern/freebayes/;
   make
   popd
 else
-  echo "Freebayes already compiled"
+  echo "Freebayes already installed"
 fi
 
 
