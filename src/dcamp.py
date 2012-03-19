@@ -63,6 +63,7 @@ def do_samtools(args):
         #Step: Breseq: Convert VCF file to Genome Diff format.
         if not os.path.exists(output_gd_path):
             breseq.command.vcf2gd(vcf_path, output_gd_path)
+            breseq.command.genome_diff_filter(output_gd_path, output_gd_path, ["ALL"], ['"AF1!=1"'])
         assert os.path.exists(output_gd_path)
 
         pipelines.common.create_data_dir(args, fasta_path, sorted_bam_path)
@@ -137,7 +138,7 @@ def do_gatk(args):
         dedup_metrics_path = os.path.join(step_3_dir, "dedup.metrics")
         picardtools.mark_duplicates(sorted_bam_path, dedup_bam_path, dedup_metrics_path)
 
-        #Step: Samtools: Index BAM.
+        #Step: Samtools: Index BAM. ***Do after mark duplicates.
         index_done_file = os.path.join(step_3_dir, "index.done")
         if not os.path.exists(index_done_file):
             samtools.index(dedup_bam_path)
@@ -151,11 +152,11 @@ def do_gatk(args):
 
         #Step: Gatk Recal. ***May not be able to do due to need for dbSNP file.
         #CountCovariates.
-        recal_csv_path = os.path.join(step_3_dir, "recal_data.csv")
-        gatk.count_covariates(fasta_path, realigned_bam_path, recal_csv_path)
-        #TableRecalibration.
-        recal_bam_path = os.path.join(step_3_dir, "recal.bam")
-        gatk.table_recalibration(fasta_path, realigned_bam_path, recal_csv_path, recal_bam_path)
+        #recal_csv_path = os.path.join(step_3_dir, "recal_data.csv")
+        #gatk.count_covariates(fasta_path, realigned_bam_path, recal_csv_path)
+        ##TableRecalibration.
+        #recal_bam_path = os.path.join(step_3_dir, "recal.bam")
+        #gatk.table_recalibration(fasta_path, realigned_bam_path, recal_csv_path, recal_bam_path)
         
         p.dump(realigned_bam_path, open(step_3_file, 'w'))
     else:
@@ -186,12 +187,32 @@ def do_gatk(args):
         if os.path.basename(gd_path) != "output.gd": 
             gd_paths.append(gd_path)
     
+    #Gatk recommended filter values for SNPs and INDELs.
+    snp_filters = ['"QD < 2.0"',\
+                   '"MQ < 40.0"',\
+                   '"FS > 60.0"',\
+                   '"HaplotypeScore > 13.0"',\
+                   '"MQRankSum < -12.5"',\
+                   '"ReadPosRankSum < -8.0"']
+
+    indel_filters = ['"QD < 2.0"',\
+                     '"ReadPosRankSum < -20.0"',\
+                     '"InbreedingCoeff < -0.8"',\
+                     '"FS > 200.0"']
+
     for gd_path in gd_paths:
         mut_type = os.path.basename(gd_path).split('.')[0]
-        breseq.command.genome_diff_filter(gd_path, gd_path, mut_type)
+
+        if mut_type == "SNP":
+            breseq.command.genome_diff_filter(gd_path, gd_path, ["SNP"], snp_filters)
+        if mut_type == "INDEL":
+            breseq.command.genome_diff_filter(gd_path, gd_path, ["INS", "DEL"], indel_filters)
+
 
     output_gd_path = os.path.join(output_dir, "output.gd")
     breseq.command.genome_diff_merge(gd_paths, output_gd_path)
+    breseq.command.genome_diff_filter(output_gd_path, output_gd_path, ["ALL"], ['"AF!=1.00"'])
+
 
     pipelines.common.create_data_dir(args, fasta_path, realigned_bam_path)
 
@@ -245,12 +266,12 @@ def main():
     results_parser = subparser.add_parser("results")
     results_parser.add_argument("--data",      dest = "data",      default = "01_Data")
     results_parser.add_argument("--downloads", dest = "downloads", default = "02_Downloads")
-    results_parser.add_argument("--output",    dest = "output",      default = "03_Output")
+    results_parser.add_argument("--output",    dest = "output",    default = "03_Output")
     results_parser.add_argument("--logs",      dest = "logs",      default = "04_Logs")
     results_parser.add_argument("--results",   dest = "results",   default = "05_Results")
     results_parser.add_argument("--name",      dest = "job_name", required = True)
     results_parser.add_argument("test_paths", nargs = '+')
-    results_parser.add_argument("-f", action = "store_true",  dest = "force_overwrite",   default = False)
+    results_parser.add_argument("-f", action = "store_true", dest = "force_overwrite", default = False)
     results_parser.set_defaults(func = do_results)
 
     #create-alignment.
