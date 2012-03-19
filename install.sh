@@ -20,7 +20,11 @@ fi
 
 #Freebayes.
 if [ -z $(which freebayes) ]; then
-  pushd extern/freebayes/;
+  pushd extern;
+    git clone --recursive git://github.com/ekg/freebayes.git
+  popd
+
+  pushd extern/freebayes/
   make
   popd
 else
