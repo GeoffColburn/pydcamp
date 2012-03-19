@@ -5,8 +5,9 @@
 if [ ! -f "extern/samtools-0.1.6/samtools" ]; then
   pushd extern/samtools-0.1.6/; make; popd
 else
-  echo "Samtools already compiled."
+  echo "Samtools-0.1.6 already compiled."
 fi
+
 #Samtool-0.1.18, newest version.
 if [ ! -f "extern/samtools-0.1.18/samtools-0.1.18" ]; then
   pushd extern/samtools-0.1.18/; 
@@ -14,7 +15,16 @@ if [ ! -f "extern/samtools-0.1.18/samtools-0.1.18" ]; then
   mv samtools samtools-0.1.18
   popd
 else
-  echo "Samtools already compiled."
+  echo "Samtools-0.1.18 already compiled."
+fi
+
+#Freebayes.
+if [ ! -f "extern/freebayes/bin/freebayes" ]; then
+  pushd extern/freebayes/;
+  make
+  popd
+else
+  echo "Freebayes already compiled"
 fi
 
 
