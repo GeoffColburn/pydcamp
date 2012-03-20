@@ -61,9 +61,8 @@ def do_samtools(args):
         assert os.path.exists(vcf_path)
         
         #Step: Breseq: Convert VCF file to Genome Diff format.
-        if not os.path.exists(output_gd_path):
-            breseq.command.vcf2gd(vcf_path, output_gd_path)
-            breseq.command.genome_diff_filter(output_gd_path, output_gd_path, ["ALL"], ['"AF1!=1"'])
+        breseq.command.vcf2gd(vcf_path, output_gd_path)
+        breseq.command.genome_diff_filter(output_gd_path, output_gd_path, ["ALL"], ['"AF1!=1"'])
         assert os.path.exists(output_gd_path)
 
         pipelines.common.create_data_dir(args, fasta_path, sorted_bam_path)
@@ -177,7 +176,8 @@ def do_gatk(args):
     vcf_paths = [raw_vcf_path] 
     for filter_type in ["SNP", "INDEL"]:
         filter_vcf_path = os.path.join(output_dir, "{}.vcf".format(filter_type))
-        gatk.variant_filtration_walker(fasta_path, raw_vcf_path, filter_vcf_path, filter_type) 
+        #***Could not get GATK filtering to work.
+        #gatk.variant_filtration_walker(fasta_path, raw_vcf_path, filter_vcf_path, filter_type) 
         vcf_paths.append(filter_vcf_path)
 
     gd_paths = list()
