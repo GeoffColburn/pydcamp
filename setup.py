@@ -8,7 +8,6 @@ setup(name = "dcamp",
       packages = ["extern", "breseq", "libdcamp", "pipelines", "extern/libpp"],
 
       scripts = ["src/dcamp.py",
-                 "extern/freebayes/bin/freebayes",
                  "extern/samtools-0.1.18/samtools-0.1.18",
                  "extern/samtools-0.1.18/bcftools/bcftools",
                  "extern/breakdancer/cpp/breakdancer_max",

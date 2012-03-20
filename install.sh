@@ -18,16 +18,6 @@ else
   echo "Samtools-0.1.18 already installed."
 fi
 
-#Freebayes.
-if [ -z $(which freebayes) ]; then
-  pushd extern/freebayes/;
-  make
-  popd
-else
-  echo "Freebayes already installed"
-fi
-
-
 #Breakdancer.
 if [ -z $(which breakdancer_max) ]; then
   pushd extern/breakdancer/cpp/;make; popd
