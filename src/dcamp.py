@@ -274,6 +274,18 @@ def main():
     results_parser.add_argument("-f", action = "store_true", dest = "force_overwrite", default = False)
     results_parser.set_defaults(func = do_results)
 
+    #Make test.
+    make_test_parser = subparser.add_parser("make-test")
+    make_test_parser.add_argument("--data",      dest = "data",      default = "01_Data")
+    make_test_parser.add_argument("--downloads", dest = "downloads", default = "02_Downloads")
+    make_test_parser.add_argument("--output",    dest = "output",    default = "03_Output")
+    make_test_parser.add_argument("--logs",      dest = "logs",      default = "04_Logs")
+    make_test_parser.add_argument("--results",   dest = "results",   default = "05_Results")
+    make_test_parser.add_argument("--name",      dest = "job_name",  default = "make_test")
+    make_test_parser.add_argument("--test-path", dest = "test_path", default = "03_Output/make_test")
+    make_test_parser.add_argument("-f", action = "store_true", dest = "force_overwrite", default = False)
+    make_test_parser.set_defaults(func = do_make_test)
+
     #create-alignment.
     create_alignment_parser = subparser.add_parser("create-alignment")
     create_alignment_parser.add_argument("-o", dest = "output_dir")
