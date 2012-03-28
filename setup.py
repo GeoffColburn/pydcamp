@@ -5,15 +5,15 @@ from distutils.core import setup
 setup(name = "dcamp",
       package_dir = {'':"src"},
 
-      packages = ["extern", "breseq", "libdcamp", "pipelines", "extern/libpp"],
+      packages = ["extern", "breseq", "libdcamp", "pipelines" ],
 
       scripts = ["src/dcamp.py",
                  "extern/samtools-0.1.18/samtools-0.1.18",
-                 "extern/samtools-0.1.18/bcftools/bcftools",
-                 "extern/breakdancer/cpp/breakdancer_max",
-                 "extern/breakdancer/perl/AlnParser.pm",
-                 "extern/breakdancer/perl/Poisson.pm",
-                 "extern/breakdancer/perl/bam2cfg.pl"],
+                 "extern/samtools-0.1.18/bcftools/bcftools"]
+                 #"extern/breakdancer/cpp/breakdancer_max",
+                 #"extern/breakdancer/perl/AlnParser.pm",
+                 #"extern/breakdancer/perl/Poisson.pm",
+                 #"extern/breakdancer/perl/bam2cfg.pl"],
 
       data_files = [("share/dcamp/gatk", ["share/GenomeAnalysisTK-1.4/GenomeAnalysisTK.jar",
                                           "share/GenomeAnalysisTK-1.4/AnalyzeCovariates.jar"]),

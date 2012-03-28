@@ -22,7 +22,6 @@ from libdcamp.html_factory import HtmlFactory
 from libdcamp.file_factory import FileFactory
 import libdcamp.job as job
 
-from BeautifulSoup import BeautifulSoup
 import urllib2
 
 
