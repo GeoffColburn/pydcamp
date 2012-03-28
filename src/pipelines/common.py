@@ -234,7 +234,7 @@ def create_alignment(args, fasta_path, output_dir):
 
         bam_paths = list()
         #Read file input.
-        if not args.aln_paths and args.read_paths:
+        if args.read_paths:
             #Step: BWA: SAI(s)
             sam_args = bwa_aln(fasta_path, args.read_paths, step_2_dir)
                     
