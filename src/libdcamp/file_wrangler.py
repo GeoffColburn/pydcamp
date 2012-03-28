@@ -5,12 +5,16 @@ from collections import defaultdict
 
 
 class FileWrangler:
-    def __init__(self, dir_paths, key):
-        self.file_wrangle_fmt = os.path.join("{}/{}", key)
+    def __init__(self, dir_paths, key, file = False):
+        #Path to wrangle/search for.
+        self.file_wrangle_fmt = os.path.join("{}/{}", key) if not file else "{}/{}" + key
+        
+        #Data structures for efficient access to paths.
         self.data_list = list()
         self.data_dict = defaultdict(dict)
         self.job_ids = list()
         self.run_ids = list()
+
         #Sets to collect only unique values for job_ids and run_ids.
         seen_job_ids = set()
         seen_run_ids = set()
@@ -46,3 +50,5 @@ class FileWrangler:
             return self.data_dict[job_id][run_id]
         else:
             return None
+
+

@@ -5,6 +5,7 @@ import glob
 import shutil
 import argparse
 import string
+import re
 import pickle as p
 
 
@@ -21,12 +22,15 @@ from libdcamp.html_factory import HtmlFactory
 from libdcamp.file_factory import FileFactory
 import libdcamp.job as job
 
+from BeautifulSoup import BeautifulSoup
+import urllib2
+
 
                 
 def do_results(args):
     settings = Settings(args)
 
-    job_paths = job.handle_gds(settings.test_paths, args.force_overwrite)
+    job_paths = job.handle_gds(args.test_paths, args.force_overwrite)
 
     html_factory = HtmlFactory()
     html_factory.write_index_page(job_paths)
@@ -35,7 +39,19 @@ def do_results(args):
     file_factory.write_validation_table(job_paths)
     file_factory.write_mutation_rates_table(job_paths)
 
-    return
+    return 0
+
+def do_make_test(args):
+    settings = Settings(args)
+    job.handle_logs(args.test_path, args.log_path, args.force_overwrite)
+
+    return 0
+
+    #job_paths = job.handle_gds(args.test_path, args.force_overwrite)
+
+    #html_factory = HtmlFactory()
+
+    #return 0
 
 def do_create_alignment(args):
     fasta_path = pipelines.common.prepare_reference(args, "01_reference_conversion")
@@ -117,6 +133,23 @@ def do_breakdancer(args):
 
     shutil.copy2(cfg_path, new_cfg_path )
     shutil.copy2(ctx_path, new_ctx_path )
+
+def do_freebayes(args):
+    fasta_path = pipelines.common.prepare_reference(args, "01_reference_conversion")
+    sorted_bam_path = pipelines.common.create_alignment(args, fasta_path, "02_reference_alignment")
+
+    output_dir = os.path.join(args.output_dir, "output")
+    vcf_path = os.path.join(args.output_dir, "output.vcf")
+    gd_path = os.path.join(args.output_dir, "output.gd")
+
+    if not os.path.exists(output_dir): os.makedirs(output_dir)
+    if not os.path.exists(vcf_path):
+        cmd = "freebayes --vcf {} --fasta-reference {} --bam {}"\
+                .format(vcf_path, fasta_path, sorted_bam_path)
+        os.system(cmd)
+
+    breseq.command.vcf2gd(vcf_path, gd_path)
+
 
 def do_gatk(args):
     fasta_path = pipelines.common.prepare_reference(args, "01_reference_conversion")
@@ -251,11 +284,49 @@ def do_create_simulated_gds(args):
             fout.write(line)
 
 def do_test(args):
-    gd = GenomeDiff(args.genome_diff)
+    #SRA_link_fmt = "http://www.ncbi.nlm.nih.gov/sra?term={}"
 
-    print gd.header_info().other
-    print gd.header_info().ref_seqs
-    print gd.header_info().read_seqs
+    #SRA_file = open(args.SRA_file, 'r')
+    #SRR_file = open('SRR.txt', 'w')
+
+    #for line in SRA_file.readlines():
+    #    tokens = line.split()
+    #    key = tokens[0]
+    #    value = tokens[len(tokens) - 1]
+    #    
+    #    raw_html = urllib2.urlopen(SRA_link_fmt.format(value))
+    #    soup = BeautifulSoup(raw_html)
+
+    #    #SRR_link = soup.find(SRR_link_fmt)
+    #    #links = soup.find("tr", {"class" : "sra-run-list-header"})
+    #    links = soup.findAll('a')
+    #    srr_values = [ link.string for link in links if link.string and link.string.startswith("SRR")]
+
+    #    SRR_file.write("{}\t{}\t{}\t{}\n".format(key, value, ",".join(srr_values), SRA_link_fmt.format(value)))
+
+
+    #    print key, value, ",".join(srr_values), SRA_link_fmt.format(value)
+
+    Genbank_values = ["NZ_CH482380.1", "NZ_CH482381.1", "NZ_CH482382.1"] 
+
+    SRR_file = open(args.SRR_file, 'r')
+    for line in SRR_file.readlines():
+        tokens = line.split()
+        gd_file_name = tokens[0] + ".gd"
+        gd_file = open(gd_file_name, 'w')
+
+        gd_file.write("#=GENOME_DIFF 1.0\n")
+
+        SRA_value = tokens[2]
+
+        for value in Genbank_values:
+            gd_file.write("#=REFSEQ\tGenbank:{}\n".format(value))
+        
+        gd_file.write("#=READSEQ\tSRA:{}\n".format(SRA_value))
+
+
+
+
 
 
 def main():
@@ -278,11 +349,10 @@ def main():
     make_test_parser = subparser.add_parser("make-test")
     make_test_parser.add_argument("--data",      dest = "data",      default = "01_Data")
     make_test_parser.add_argument("--downloads", dest = "downloads", default = "02_Downloads")
-    make_test_parser.add_argument("--output",    dest = "output",    default = "03_Output")
-    make_test_parser.add_argument("--logs",      dest = "logs",      default = "04_Logs")
+    make_test_parser.add_argument("--output",    dest = "test_path", default = "03_Output")
+    make_test_parser.add_argument("--logs",      dest = "log_path",  default = "04_Logs")
     make_test_parser.add_argument("--results",   dest = "results",   default = "05_Results")
     make_test_parser.add_argument("--name",      dest = "job_name",  default = "make_test")
-    make_test_parser.add_argument("--test-path", dest = "test_path", default = "03_Output/make_test")
     make_test_parser.add_argument("-f", action = "store_true", dest = "force_overwrite", default = False)
     make_test_parser.set_defaults(func = do_make_test)
 
@@ -314,6 +384,15 @@ def main():
     breakdancer_parser.add_argument("read_paths", nargs = '+')
     breakdancer_parser.set_defaults(func = do_breakdancer)
 
+    #breakdancer.
+    freebayes_parser = subparser.add_parser("freebayes")
+    freebayes_parser.add_argument("-o", dest = "output_dir")
+    freebayes_parser.add_argument("-r", action = "append", dest = "ref_paths")
+    freebayes_parser.add_argument("--pair-ended", action = "store_true", dest = "pair_ended", default = True)
+    freebayes_parser.add_argument("--sort_bam", action = "store_true", dest = "sort_bam", default = True)
+    freebayes_parser.add_argument("read_paths", nargs = '+')
+    freebayes_parser.set_defaults(func = do_freebayes)
+
     #gatk.
     gatk_parser = subparser.add_parser("gatk")
     gatk_parser.add_argument("-o", dest = "output_dir")
@@ -339,7 +418,7 @@ def main():
 
     #testing
     testing_parser = subparser.add_parser("test")
-    testing_parser.add_argument("-g", dest = "genome_diff")
+    testing_parser.add_argument("-i", dest = "SRR_file")
     testing_parser.set_defaults(func = do_test)
 
 

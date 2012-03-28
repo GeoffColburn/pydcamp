@@ -24,13 +24,7 @@ def handle_gd(ctrl_gd, test_gd, ref_seqs, results, force_overwrite):
 
 
 def handle_gds(test_paths, force_overwrite):
-    print "***Begin normalizing and comparing genome diffs."
-    settings = Settings.instance()
-    wrangler = FileWrangler(test_paths, "output/output.gd")
-    
-    if not os.path.exists(settings.job_dir):
-        os.makedirs(settings.job_dir)
-
+    #*** Attempt at parallelization.
     #pool = Pool(multiprocessing.cpu_count())
     #job_paths = list()
     #args = list()
@@ -44,6 +38,14 @@ def handle_gds(test_paths, force_overwrite):
     #
     #pool.map(handle_gd, args)
 
+    print "***Begin normalizing and comparing genome diffs."
+    settings = Settings.instance()
+    wrangler = FileWrangler(test_paths, "output/output.gd")
+    
+    if not os.path.exists(settings.job_dir):
+        os.makedirs(settings.job_dir)
+
+
     job_paths = list()
     for job_id, run_id, test_gd in wrangler:
         ctrl_gd = settings.ctrl_gd_fmt.format(run_id)
@@ -55,3 +57,30 @@ def handle_gds(test_paths, force_overwrite):
 
     print "***End normalizing and comparing genome diffs."
     return job_paths
+
+def handle_logs(test_path, log_path, force_overwrite):
+    print "***Handling stdout/sterr logs and determining failed tests."
+    settings = Settings.instance()
+
+    log_wrangler = FileWrangler([log_path], ".log.txt", True)
+
+    for job_id, run_id, path in wrangler:
+        print path
+    #wrangler = FileWrangler([test_path], "output/output.gd")
+    #
+    #if not os.path.exists(settings.job_dir):
+    #    os.makedirs(settings.job_dir)
+
+
+    #for job_id, run_id, test_gd in wrangler:
+    #    ctrl_gd = settings.ctrl_gd_fmt.format(run_id)
+    #    ref_seqs = GenomeDiff(ctrl_gd).ref_sequence_file_paths(settings.downloads)
+
+    #    results = settings.job_paths(job_id, run_id)
+    #    handle_gd(ctrl_gd, test_gd, ref_seqs, results, force_overwrite)
+    #    job_paths.append(results[3])
+
+    #print "***End normalizing and comparing genome diffs."
+    #return job_paths
+
+

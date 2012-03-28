@@ -24,6 +24,7 @@ def validate_alignment(aln_path):
     
 def add_or_replace_read_groups(input_path, output_path):
     cmd = "java -jar {} I={} O={} LB=FOO PL=ILLUMINA PU=BAR SM=NEE".format(_ADD_OR_REPLACE_READ_GROUPS, input_path, output_path)
+    print cmd
     assert not os.system(cmd), "Command: {}".format(cmd) 
     return output_path
 

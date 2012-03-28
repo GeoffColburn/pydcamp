@@ -4,13 +4,13 @@ import os
 def view(bam_path, sam_path):
     cmd = "samtools-0.1.18 view -hbS -o {} {}".format(bam_path, sam_path)
     print cmd
-    os.system(cmd) 
+    assert not os.system(cmd) 
     return sam_path
 
 def sort(bam_path, bam_sorted_prefix):       
     cmd = "samtools-0.1.18 sort {} {}".format(bam_path, bam_sorted_prefix)
     print cmd
-    os.system(cmd), "Command: {}".format(cmd) 
+    assert not os.system(cmd), "Command: {}".format(cmd) 
     return "{}.bam".format(bam_sorted_prefix)
     
 def merge(sam_paths, merged_bam_path, bam_paths):

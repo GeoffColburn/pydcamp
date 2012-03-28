@@ -24,6 +24,7 @@ class Settings:
         self.job_dir = os.path.join(self.results, self.job_name)
         self.job_css_path = os.path.join(self.job_dir, "dcamp/style.css")
         self.job_index_path = os.path.join(self.job_dir, "index.html")
+        self.job_make_test_path = os.path.join(self.job_dir, "make_test.html")
         self.job_validation_table_path = os.path.join(self.job_dir, "dcamp/validation_table.txt")
         self.job_mutation_rates_table_path = os.path.join(self.job_dir, "dcamp/mutation_rates.txt")
 
@@ -38,7 +39,7 @@ class Settings:
         self.output_vcf_fmt = os.path.join(self.output, "{}/{}/output/output.vcf")
 
         #Logs:
-        self.logs_log_fmt = os.path.join(self.logs, "{}/{}.log.txt")
+        self.log_fmt = os.path.join(self.logs, "{}/{}.log.txt")
 
         Settings.__instance = self
 
@@ -52,7 +53,10 @@ class Settings:
         job_path = os.path.join(self.job_dir, job_id)
         if not os.path.exists(dir):
             os.makedirs(dir)
-        return (os.path.join(dir, "ctrl.gd"), os.path.join(dir, "test.gd"), os.path.join(dir, "comp.gd"), job_path)
+        return (os.path.join(dir, "ctrl.gd"),\
+                os.path.join(dir, "test.gd"),\
+                os.path.join(dir, "comp.gd"),\
+                job_path)
 
 
 
