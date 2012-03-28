@@ -252,16 +252,16 @@ def create_alignment(args, fasta_path, output_dir):
             bam_paths = convert_sam_to_bam(read_group_sam_paths, step_2_dir)
 
         #Alignment file input.
-        elif args.aln_paths:
-            sd_aln_paths = list()
-            for aln_path in args.aln_paths:
-                sd_aln_path = add_sequence_dict(fasta_path, aln_path, step_2_dir)
-                sd_aln_paths.append(sd_aln_path)
-            #Step: Picardtools: Add read groups.
-            read_group_sam_paths = add_read_groups(sd_aln_paths, step_2_dir)
+        #elif args.aln_paths:
+        #    sd_aln_paths = list()
+        #    for aln_path in args.aln_paths:
+        #        sd_aln_path = add_sequence_dict(fasta_path, aln_path, step_2_dir)
+        #        sd_aln_paths.append(sd_aln_path)
+        #    #Step: Picardtools: Add read groups.
+        #    read_group_sam_paths = add_read_groups(sd_aln_paths, step_2_dir)
 
-            #Step: Samtools: BAM(s)
-            bam_paths = convert_sam_to_bam(read_group_sam_paths, step_2_dir)
+        #    #Step: Samtools: BAM(s)
+        #    bam_paths = convert_sam_to_bam(read_group_sam_paths, step_2_dir)
 
         
         #Step: Samtools: Sort BAM(s)
