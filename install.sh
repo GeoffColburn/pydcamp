@@ -8,15 +8,15 @@
 #  echo "Samtools-0.1.6 already compiled."
 #fi
 
-#Samtool-0.1.18, newest version.
-if [ -z $(which samtools-0.1.18) ] || [ ! -f "extern/samtools-0.1.18/samtools-0.1.18" ]; then
-  pushd extern/samtools-0.1.18/; 
-  make
-  mv samtools samtools-0.1.18
-  popd
-else
-  echo "Samtools-0.1.18 already installed."
-fi
+##Samtool-0.1.18, newest version.
+#if [ -z $(which samtools-0.1.18) ] || [ ! -f "extern/samtools-0.1.18/samtools-0.1.18" ]; then
+#  pushd extern/samtools-0.1.18/; 
+#  make
+#  mv samtools samtools-0.1.18
+#  popd
+#else
+#  echo "Samtools-0.1.18 already installed."
+#fi
 
 ##Breakdancer.
 #if [ -z $(which breakdancer_max) ]; then
