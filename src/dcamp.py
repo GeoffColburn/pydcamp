@@ -387,7 +387,7 @@ def main():
     freebayes_parser = subparser.add_parser("freebayes")
     freebayes_parser.add_argument("-o", dest = "output_dir")
     freebayes_parser.add_argument("-r", action = "append", dest = "ref_paths")
-    freebayes_parser.add_argument("--pair-ended", action = "store_true", dest = "pair_ended", default = True)
+    freebayes_parser.add_argument("--pair-ended", action = "store_true", dest = "pair_ended", default = False)
     freebayes_parser.add_argument("--sort_bam", action = "store_true", dest = "sort_bam", default = True)
     freebayes_parser.add_argument("read_paths", nargs = '+')
     freebayes_parser.set_defaults(func = do_freebayes)
