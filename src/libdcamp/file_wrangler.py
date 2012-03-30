@@ -5,7 +5,7 @@ from collections import defaultdict
 
 
 class FileWrangler:
-    def __init__(self, dir_paths, key, file = False):
+    def __init__(self, dir_paths, key):
         #Path to wrangle/search for.
         self.file_wrangle_fmt = os.path.join("{}/{}", key)
         
@@ -22,6 +22,7 @@ class FileWrangler:
         for dir_path in dir_paths:
             dir_path = dir_path.strip('/')
             for path in glob.glob(self.file_wrangle_fmt.format(dir_path, '*')):
+                print path
                 m = re.search(self.file_wrangle_fmt.format("(?P<job_id>\w+)", "(?P<run_id>\w+)"), path)
                 if m:
                     job_id = m.group("job_id")
