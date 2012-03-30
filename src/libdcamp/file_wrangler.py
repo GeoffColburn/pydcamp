@@ -5,9 +5,9 @@ from collections import defaultdict
 
 
 class FileWrangler:
-    def __init__(self, dir_paths, key):
+    def __init__(self, dir_paths, key, file = False):
         #Path to wrangle/search for.
-        self.file_wrangle_fmt = os.path.join("{}/{}", key)
+        self.file_wrangle_fmt = os.path.join("{}/{}", key) if not file else "{}/{}" + key
         
         #Data structures for efficient access to paths.
         self.data_list = list()
@@ -22,9 +22,9 @@ class FileWrangler:
         for dir_path in dir_paths:
             dir_path = dir_path.strip('/')
             for path in glob.glob(self.file_wrangle_fmt.format(dir_path, '*')):
-                m = re.search(self.file_wrangle_fmt.format("(?P<job_id>\w+)", "(?P<run_id>\w+)"), path)
+                search = "[/](?P<job_id>\w+)[/](?P<run_id>[\w\W]+)[/]" + key
+                m = re.search(search, path)
                 if m:
-                    print path
                     job_id = m.group("job_id")
                     run_id = m.group("run_id")
                     self.data_dict[job_id][run_id] = path
