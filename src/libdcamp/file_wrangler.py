@@ -7,7 +7,7 @@ from collections import defaultdict
 class FileWrangler:
     def __init__(self, dir_paths, key, file = False):
         #Path to wrangle/search for.
-        self.file_wrangle_fmt = os.path.join("{}/{}", key) if not file else "{}/{}" + key
+        self.file_wrangle_fmt = os.path.join("{}/{}", key)
         
         #Data structures for efficient access to paths.
         self.data_list = list()
