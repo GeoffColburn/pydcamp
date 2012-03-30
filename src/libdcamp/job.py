@@ -40,6 +40,11 @@ def handle_gds(test_paths, force_overwrite):
 
     print "***Begin normalizing and comparing genome diffs."
     settings = Settings.instance()
+
+    print "Searching output/output.gd in paths:"
+    for path in test_paths:
+        print "\t", path
+
     wrangler = FileWrangler(test_paths, "output/output.gd")
 
     print "Found {} test GDs".format(len(wrangler.data_list))
