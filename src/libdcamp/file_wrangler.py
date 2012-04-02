@@ -21,20 +21,18 @@ class FileWrangler:
 
         for dir_path in dir_paths:
             dir_path = dir_path.strip('/')
+            job_id = dir_path.split('/').pop()
+            print job_id
             for path in glob.glob(self.file_wrangle_fmt.format(dir_path, '*')):
-                search = "[/](?P<job_id>\w+)[/](?P<run_id>[\w\W]+)[/]" + key
-                m = re.search(search, path)
-                if m:
-                    job_id = m.group("job_id")
-                    run_id = m.group("run_id")
-                    self.data_dict[job_id][run_id] = path
-                    self.data_list.append((job_id, run_id, path))
+                run_id = path[len(dir_path) + 1:].split('/').pop(0)
+                self.data_dict[job_id][run_id] = path
+                self.data_list.append((job_id, run_id, path))
 
-                    #Unique values only.
-                    if job_id not in seen_job_ids and not seen_job_ids.add(job_id):
-                        self.job_ids.append(job_id)
-                    if run_id not in seen_run_ids and not seen_run_ids.add(run_id):
-                        self.run_ids.append(run_id)
+                #Unique values only.
+                if job_id not in seen_job_ids and not seen_job_ids.add(job_id):
+                    self.job_ids.append(job_id)
+                if run_id not in seen_run_ids and not seen_run_ids.add(run_id):
+                    self.run_ids.append(run_id)
 
         #Sort by run_ids numerically/alphabetically.
         self.data_list.sort(key = lambda x: x[1])
