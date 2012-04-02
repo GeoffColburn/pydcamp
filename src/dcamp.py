@@ -207,19 +207,7 @@ def do_gatk(args):
     if not os.path.exists(raw_vcf_path):
         gatk.unified_genotyper(fasta_path, realigned_bam_path, raw_vcf_path, args.glm_option)
 
-    vcf_paths = [raw_vcf_path] 
-    for filter_type in ["SNP", "INDEL"]:
-        filter_vcf_path = os.path.join(output_dir, "{}.vcf".format(filter_type))
-        #***Could not get GATK filtering to work.
-        #gatk.variant_filtration_walker(fasta_path, raw_vcf_path, filter_vcf_path, filter_type) 
-        vcf_paths.append(filter_vcf_path)
-
-    gd_paths = list()
-    for vcf_path in vcf_paths:
-        gd_path = vcf_path.replace(".vcf", ".gd")
-        breseq.command.vcf2gd(vcf_path, gd_path)
-        if os.path.basename(gd_path) != "output.gd": 
-            gd_paths.append(gd_path)
+    breseq.command.vcf2gd(raw_vcf_path, gd_path)
     
     #Gatk recommended filter values for SNPs and INDELs.
     snp_filters = ['"QD < 2.0"',\
@@ -234,18 +222,14 @@ def do_gatk(args):
                      '"InbreedingCoeff < -0.8"',\
                      '"FS > 200.0"']
 
-    for gd_path in gd_paths:
-        mut_type = os.path.basename(gd_path).split('.')[0]
+    snp_gd = os.path.join(output_dir, "SNP.gd")
+    indels_gd = os.path.join(output_dir, "INDELS.gd")
 
-        if mut_type == "SNP":
-            breseq.command.genome_diff_filter(gd_path, gd_path, ["SNP"], snp_filters)
-        if mut_type == "INDEL":
-            breseq.command.genome_diff_filter(gd_path, gd_path, ["INS", "DEL"], indel_filters)
+    breseq.command.genome_diff_filter(snp_gd, gd_path, ["SNP"], snp_filters)
+    breseq.command.genome_diff_filter(indels_gd, gd_path, ["INS", "DEL"], indel_filters)
 
-
-    output_gd_path = os.path.join(output_dir, "output.gd")
-    breseq.command.genome_diff_merge(gd_paths, output_gd_path)
-    breseq.command.genome_diff_filter(output_gd_path, output_gd_path, ["ALL"], ['"AF!=1.00"'])
+    breseq.command.genome_diff_merge([snp_gd, indels.gd] , gd_path)
+    breseq.command.genome_diff_filter(gd_path, gd_path, ["ALL"], ['"AF!=1.00"'])
 
 
     pipelines.common.create_data_dir(args, fasta_path, realigned_bam_path)
