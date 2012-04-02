@@ -29,6 +29,8 @@ import urllib2
 def do_results(args):
     settings = Settings(args)
 
+    print "Searching for output/output.gd in paths:", ", ".join(args.test_paths)
+
     job_paths = job.handle_gds(args.test_paths, args.force_overwrite)
 
     html_factory = HtmlFactory()
@@ -110,7 +112,7 @@ def do_breakdancer(args):
         #Breakdancer::bam2cfg.pl.
         ##if not os.path.exists(cfg_path):
         cmd = "bam2cfg.pl -h -g {} > {}".format(sorted_bam_file, cfg_file)
-        print cmd
+        print cmd           
         os.system(cmd)
         assert os.path.exists(cfg_file)
 
@@ -322,11 +324,6 @@ def do_test(args):
             gd_file.write("#=REFSEQ\tGenbank:{}\n".format(value))
         
         gd_file.write("#=READSEQ\tSRA:{}\n".format(SRA_value))
-
-
-
-
-
 
 def main():
     main_parser = argparse.ArgumentParser()

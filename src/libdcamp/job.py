@@ -47,7 +47,7 @@ def handle_gds(test_paths, force_overwrite):
 
     wrangler = FileWrangler(test_paths, "output/output.gd")
 
-    print "Found {} test GDs".format(len(wrangler.data_list))
+    assert len(wrangler.data_list), "No GDs found from, check REGEX expression in FileWrangler."
     
     if not os.path.exists(settings.job_dir):
         os.makedirs(settings.job_dir)
