@@ -228,7 +228,7 @@ def do_gatk(args):
     breseq.command.genome_diff_filter(snp_gd, gd_path, ["SNP"], snp_filters)
     breseq.command.genome_diff_filter(indels_gd, gd_path, ["INS", "DEL"], indel_filters)
 
-    breseq.command.genome_diff_merge([snp_gd, indels.gd] , gd_path)
+    breseq.command.genome_diff_merge([snp_gd, indels_gd] , gd_path)
     breseq.command.genome_diff_filter(gd_path, gd_path, ["ALL"], ['"AF!=1.00"'])
 
 
