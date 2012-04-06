@@ -59,8 +59,7 @@ def do_create_alignment(args):
     sorted_bam_path = pipelines.common.create_alignment(args, fasta_path, "02_reference_alignment")
 
 def do_samtools(args):
-    fasta_path = pipelines.common.prepare_reference(args, "01_reference_conversion")
-    sorted_bam_path = pipelines.common.create_alignment(args, fasta_path, "02_reference_alignment")
+    fasta_path, sorted_bam_path = pipelines.common.ssaha2_alignment(args)
 
     output_dir = os.path.join(args.output_dir, "output")
     output_file = os.path.join(output_dir, "output.done")
@@ -84,8 +83,6 @@ def do_samtools(args):
 
         pipelines.common.create_data_dir(args, fasta_path, sorted_bam_path)
     
-
-
 def do_breakdancer(args): 
     """Believe we need to keep all files in one directory, although it's not mentioned,
     breakdancer may look at files other than the .bam file."""
@@ -136,8 +133,7 @@ def do_breakdancer(args):
     shutil.copy2(ctx_path, new_ctx_path )
 
 def do_freebayes(args):
-    fasta_path = pipelines.common.prepare_reference(args, "01_reference_conversion")
-    sorted_bam_path = pipelines.common.create_alignment(args, fasta_path, "02_reference_alignment")
+    fasta_path, sorted_bam_path = pipelines.common.bowtie_alignment(args)
 
     output_dir = os.path.join(args.output_dir, "output")
     vcf_path = os.path.join(args.output_dir, "output.vcf")
@@ -153,8 +149,7 @@ def do_freebayes(args):
 
 
 def do_gatk(args):
-    fasta_path = pipelines.common.prepare_reference(args, "01_reference_conversion")
-    sorted_bam_path = pipelines.common.create_alignment(args, fasta_path, "02_reference_alignment")
+    fasta_path, sorted_bam_path = pipelines.common.ssaha2_alignment(args)
 
     #Gatk
     #Step 3
@@ -268,46 +263,7 @@ def do_create_simulated_gds(args):
         for line in lines:
             fout.write(line)
 
-def do_test(args):
-    #SRA_link_fmt = "http://www.ncbi.nlm.nih.gov/sra?term={}"
-
-    #SRA_file = open(args.SRA_file, 'r')
-    #SRR_file = open('SRR.txt', 'w')
-
-    #for line in SRA_file.readlines():
-    #    tokens = line.split()
-    #    key = tokens[0]
-    #    value = tokens[len(tokens) - 1]
-    #    
-    #    raw_html = urllib2.urlopen(SRA_link_fmt.format(value))
-    #    soup = BeautifulSoup(raw_html)
-
-    #    #SRR_link = soup.find(SRR_link_fmt)
-    #    #links = soup.find("tr", {"class" : "sra-run-list-header"})
-    #    links = soup.findAll('a')
-    #    srr_values = [ link.string for link in links if link.string and link.string.startswith("SRR")]
-
-    #    SRR_file.write("{}\t{}\t{}\t{}\n".format(key, value, ",".join(srr_values), SRA_link_fmt.format(value)))
-
-
-    #    print key, value, ",".join(srr_values), SRA_link_fmt.format(value)
-
-    Genbank_values = ["NZ_CH482380.1", "NZ_CH482381.1", "NZ_CH482382.1"] 
-
-    SRR_file = open(args.SRR_file, 'r')
-    for line in SRR_file.readlines():
-        tokens = line.split()
-        gd_file_name = tokens[0] + ".gd"
-        gd_file = open(gd_file_name, 'w')
-
-        gd_file.write("#=GENOME_DIFF 1.0\n")
-
-        SRA_value = tokens[2]
-
-        for value in Genbank_values:
-            gd_file.write("#=REFSEQ\tGenbank:{}\n".format(value))
-        
-        gd_file.write("#=READSEQ\tSRA:{}\n".format(SRA_value))
+def do_test(args): pass
 
 def main():
     main_parser = argparse.ArgumentParser()
@@ -344,6 +300,24 @@ def main():
     create_alignment_parser.add_argument("--sort_bam", action = "store_true", dest = "sort_bam", default = True)
     create_alignment_parser.add_argument("read_paths", nargs = '+')
     create_alignment_parser.set_defaults(func = do_create_alignment)
+
+    #bowtie.
+    bowtie_parser = subparser.add_parser("bowtie")
+    bowtie_parser.add_argument("-o", dest = "output_dir", required = True)
+    bowtie_parser.add_argument("-r", action = "append", dest = "ref_paths", required = True)
+    bowtie_parser.add_argument("--pair-ended", action = "store_true", dest = "pair_ended", default = False)
+    bowtie_parser.add_argument("--sort_bam", action = "store_true", dest = "sort_bam", default = True)
+    bowtie_parser.add_argument("read_paths", nargs = '+')
+    bowtie_parser.set_defaults(func = pipelines.common.bowtie_alignment)
+
+    #ssaha2.
+    ssaha2_parser = subparser.add_parser("ssaha2")
+    ssaha2_parser.add_argument("-o", dest = "output_dir", required = True)
+    ssaha2_parser.add_argument("-r", action = "append", dest = "ref_paths", required = True)
+    ssaha2_parser.add_argument("--pair-ended", action = "store_true", dest = "pair_ended", default = False)
+    ssaha2_parser.add_argument("--sort_bam", action = "store_true", dest = "sort_bam", default = True)
+    ssaha2_parser.add_argument("read_paths", nargs = '+')
+    ssaha2_parser.set_defaults(func = pipelines.common.ssaha2_alignment)
 
     #samtools.
     samtools_parser = subparser.add_parser("samtools")
@@ -398,14 +372,7 @@ def main():
 
     #testing
     testing_parser = subparser.add_parser("test")
-    testing_parser.add_argument("-i", dest = "SRR_file")
     testing_parser.set_defaults(func = do_test)
-
-
-
-
-
-
 
 
 
