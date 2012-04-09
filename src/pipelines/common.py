@@ -234,8 +234,8 @@ def bowtie_alignment(args):
 def ssaha2_alignment(args):
     fasta_path = prepare_reference(args, "01_reference_conversion")
 
-    output_dir = "02_reference_alignment"
-    step_2_dir = os.path.join(args.output_dir, output_dir)
+    step_2_dir = os.path.join(args.output_dir, "01_reference_conversion")
+    #step_2_dir = os.path.join(args.output_dir, "02_reference_alignment")
     step_2_done_file = os.path.join(step_2_dir, "create_alignment.done")
 
     sorted_bam_path = ""
@@ -253,20 +253,19 @@ def ssaha2_alignment(args):
 
         cmd_fmt = "ssaha2 -disk 2 -save {} -kmer {} -skip {} -seeds 1 -score 12 -cmatch 9 -ckmer 1 -output sam_soft -outfile {} {}"
 
-        ssaha2_args = [(built_reference_path, os.path.basename(read_path.replace(".fastq",".sam")), read_path) for read_path in args.read_paths] 
-        for basename, sam_file_name, read_path in ssaha2_args:
-            sam_path = os.path.join(step_2_dir, sam_file_name)
+        sam_paths = map(lambda read_path: os.path.join(step_2_dir, os.path.basename(read_path.replace(".fastq",".sam"))), args.read_paths)
+        for sam_path, read_path in zip(sam_paths, args.read_paths):
             cmd = cmd_fmt.format(built_reference_path, 13, 1, sam_path, read_path)
             print cmd
             if not os.path.exists(sam_path): os.system(cmd)
 
         sam_paths = [os.path.join(step_2_dir, ssaha2_arg[1]) for ssaha2_arg in ssaha2_args]
 
-        seq_dict_path = os.path.join(step_2_dir, "ref_dict.sam")
-        print "+++ Creating sequence dictionary: ", seq_dict_path
-        picardtools.create_sequence_dictionary(fasta_path, seq_dict_path)
-        for sam_path in sam_paths:
-            picardtools.merge_sams([seq_dict_path, sam_path], sam_path)
+        #seq_dict_path = os.path.join(step_2_dir, "ref_dict.sam")
+        #print "+++ Creating sequence dictionary: ", seq_dict_path
+        #picardtools.create_sequence_dictionary(fasta_path, seq_dict_path)
+        #for sam_path in sam_paths:
+        #    picardtools.merge_sams([seq_dict_path, sam_path], sam_path)
 
         #Step: Picardtools: Add read groups.
         print "+++ Adding read groups to: {}".format(", ".join(sam_paths))
