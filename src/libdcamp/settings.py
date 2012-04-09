@@ -39,7 +39,7 @@ class Settings:
         self.output_vcf_fmt = os.path.join(self.output, "{}/{}/output/output.vcf")
 
         #Logs:
-        self.log_fmt = os.path.join(self.logs, "{}/{}.log.txt")
+        self.log_fmt = os.path.join(self.output.replace("03_Output","04_Logs"), "{}/{}.log.txt")
 
         Settings.__instance = self
 

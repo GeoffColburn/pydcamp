@@ -159,7 +159,6 @@ def add_read_groups(aln_paths, output_dir):
 
 def convert_sam_to_bam(sam_paths, output_dir = "02_reference_alignment"):
     bam_paths=list()
-    #bam_done_file_path = os.path.join(step_2_dir, "bam.done")
     for sam_path in sam_paths:
         bam_path = str(sam_path).replace(".sam", ".bam")
         
@@ -263,7 +262,7 @@ def ssaha2_alignment(args):
             print cmd
             os.system(cmd)
 
-        sam_paths = [sam_path for basename, sam_path, read_path in ssaha2_args]
+        sam_paths = [os.path.join(step_2_dir, sam_path) for basename, sam_path, read_path in ssaha2_args]
 
         #Step: Picardtools: Add read groups.
         read_group_sam_paths = add_read_groups(sam_paths, step_2_dir)
@@ -288,35 +287,6 @@ def ssaha2_alignment(args):
     print fasta_path, sorted_bam_path
     return fasta_path, sorted_bam_path
 
-
-
-
-
-
-def prepare_reference(args, output_dir):
-    step_1_dir  = os.path.join(args.output_dir, output_dir)
-    step_1_done_file = os.path.join(step_1_dir, "prepare_reference.done")
-    fasta_path = ""
-    if not os.path.exists(step_1_done_file):
-        print "++Preparing reference file."
-        if not os.path.exists(step_1_dir): os.makedirs(step_1_dir)
-        
-        #Step: Convert Genbank files to Fasta files.
-        fasta_paths = convert_genbanks(args.ref_paths, step_1_dir)
-        
-        #Step: Merge fasta files if there is more than one return single fasta path if not.
-        fasta_path = merge_fastas(fasta_paths, step_1_dir)
-        
-        #Step: Mark step as completed.
-        p.dump(fasta_path, open(step_1_done_file, 'w'))
-
-    else:
-        print "++Reference file has already been prepared."
-        fasta_path = p.load(open(step_1_done_file, 'r'))
-                
-    assert os.path.exists(fasta_path) and fasta_path.endswith(".fasta")
-    
-    return fasta_path
 
 
 def create_alignment(args, fasta_path, output_dir):
@@ -368,6 +338,35 @@ def create_alignment(args, fasta_path, output_dir):
     assert os.path.exists(sorted_bam_path) and sorted_bam_path.endswith(".bam")
     
     return sorted_bam_path
+
+
+
+def prepare_reference(args, output_dir):
+    step_1_dir  = os.path.join(args.output_dir, output_dir)
+    step_1_done_file = os.path.join(step_1_dir, "prepare_reference.done")
+    fasta_path = ""
+    if not os.path.exists(step_1_done_file):
+        print "++Preparing reference file."
+        if not os.path.exists(step_1_dir): os.makedirs(step_1_dir)
+        
+        #Step: Convert Genbank files to Fasta files.
+        fasta_paths = convert_genbanks(args.ref_paths, step_1_dir)
+        
+        #Step: Merge fasta files if there is more than one return single fasta path if not.
+        fasta_path = merge_fastas(fasta_paths, step_1_dir)
+        
+        #Step: Mark step as completed.
+        p.dump(fasta_path, open(step_1_done_file, 'w'))
+
+    else:
+        print "++Reference file has already been prepared."
+        fasta_path = p.load(open(step_1_done_file, 'r'))
+                
+    assert os.path.exists(fasta_path) and fasta_path.endswith(".fasta")
+    
+    return fasta_path
+
+
 
 def create_data_dir(args, fasta_path, bam_path):
     print "++Creating data directory for bam2aln processing."

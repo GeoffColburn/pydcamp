@@ -69,14 +69,21 @@ def handle_gds(test_paths, force_overwrite):
     print "***End normalizing and comparing genome diffs."
     return job_paths
 
-def handle_logs(test_path, log_path, force_overwrite):
+def handle_logs(test_paths, force_overwrite):
     print "***Handling stdout/sterr logs and determining failed tests."
     settings = Settings.instance()
 
-    log_wrangler = FileWrangler([log_path], ".log.txt", True)
+    wrangler = FileWrangler(test_paths, "output/output.gd")
 
-    for job_id, run_id, path in wrangler:
-        print path
+    for test_path in test_paths:
+        log_path_fmt = os.path.join(test_path.replace(settings.output, settings.log), "{}.log.txt")
+
+
+
+
+
+    
+
     #wrangler = FileWrangler([test_path], "output/output.gd")
     #
     #if not os.path.exists(settings.job_dir):
