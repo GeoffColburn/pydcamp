@@ -7,6 +7,7 @@ _MARK_DUPLICATES            = os.path.join(_PICARD_TOOLS_DIR, "MarkDuplicates.ja
 _VALIDATE_SAM_FILE          = os.path.join(_PICARD_TOOLS_DIR, "ValidateSamFile.jar") 
 _CREATE_SEQUENCE_DICTIONARY = os.path.join(_PICARD_TOOLS_DIR, "CreateSequenceDictionary.jar") 
 _SORT_SAM                   = os.path.join(_PICARD_TOOLS_DIR, "SortSam.jar")
+_MERGE_SAMS                 = os.path.join(_PICARD_TOOLS_DIR, "MergeSamFiles.jar")
 
 def mark_duplicates(bam_path, output_bam_path, output_metrics_path):
     cmd = "java -Xmx1g -jar {} \
@@ -37,4 +38,10 @@ def sort_sam(aln_path, output_aln_path, sort_option = "coordinate"):
     cmd = "java -jar {} INPUT={} OUTPUT={} SORT_ORDER={}".format(_SORT_SAM, aln_path, output_aln_path, sort_option)
     assert not os.system(cmd), "Command: {}".format(cmd) 
     return output_aln_path
+
+def merge_sams(sam_paths, output, merge_seq_dicts = True):
+    cmd = "java -jar {} INPUT={} OUTPUT={} MERGE_SEQUENCE_DICTIONARIES={}".format(_MERGE_SAMS," INPUT=".join(sam_paths), output, "true" if merge_seq_dicts else "false")
+    assert not os.system(cmd), "Command: {}".format(cmd) 
+    return output_aln_path
+
 
