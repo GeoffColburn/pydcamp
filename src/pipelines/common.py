@@ -182,16 +182,19 @@ def sort_bams(bam_paths, output_dir):
     assert len(sorted_bam_paths)
     return sorted_bam_paths
 
-def add_sequence_dict(ref_path, aln_path, output_dir):
-    output_basename = os.path.basename(aln_path)
-    output_path = os.path.join(output_dir, "SD_{}".format(output_basename))
-    if os.path.exists(output_path): return output_path
+def add_sequence_dict(ref_path, sam_paths, output_dir):
+    sd_sam_paths = map(lambda sam_path:os.path.join(output_dir, "SD_{}".format(os.path.basename(sam_path))), sam_paths)
 
-    picardtools.create_sequence_dictionary(ref_path, output_path)
-    fout = open(output_path, 'a')
-    for line in open(aln_path, 'r').readlines():
-        fout.write(line)
-    return output_path
+    #Place header info at start of files.
+    map(lambda sd_sam_path: picardtools(ref_path, sd_sam_path), sd_sam_paths)
+
+    #Append the alignments.
+    for sd_sam_path, sam_path in zip(sd_sam_paths, sam_paths):
+        sd_sam_file = open(sd_sam_path, 'a')
+        for line in open(sam_path, 'r').readlines():
+            sd_sam_file.write(line)
+
+    return sd_sam_paths
 
 def bowtie_alignment(args):
     fasta_path = prepare_reference(args, "01_reference_conversion")
@@ -234,8 +237,7 @@ def bowtie_alignment(args):
 def ssaha2_alignment(args):
     fasta_path = prepare_reference(args, "01_reference_conversion")
 
-    step_2_dir = os.path.join(args.output_dir, "01_reference_conversion")
-    #step_2_dir = os.path.join(args.output_dir, "02_reference_alignment")
+    step_2_dir = os.path.join(args.output_dir, "02_reference_alignment")
     step_2_done_file = os.path.join(step_2_dir, "create_alignment.done")
 
     sorted_bam_path = ""
@@ -251,23 +253,21 @@ def ssaha2_alignment(args):
         print cmd
         os.system(cmd)
 
-        cmd_fmt = "ssaha2 -disk 2 -save {} -kmer {} -skip {} -seeds 1 -score 12 -cmatch 9 -ckmer 1 -output sam_soft -outfile {} {}"
+        cmd_fmt = "ssaha2 -disk 2 -save {} -kmer 13 -skip 1 -seeds 1 -score 12 -cmatch 9 -ckmer 1 -output sam_soft -outfile {} {}"
 
         sam_paths = map(lambda read_path: os.path.join(step_2_dir, os.path.basename(read_path.replace(".fastq",".sam"))), args.read_paths)
         for sam_path, read_path in zip(sam_paths, args.read_paths):
-            cmd = cmd_fmt.format(built_reference_path, 13, 1, sam_path, read_path)
+            cmd = cmd_fmt.format(built_reference_path, sam_path, read_path)
             print cmd
             if not os.path.exists(sam_path): os.system(cmd)
 
-        #seq_dict_path = os.path.join(step_2_dir, "ref_dict.sam")
-        #print "+++ Creating sequence dictionary: ", seq_dict_path
-        #picardtools.create_sequence_dictionary(fasta_path, seq_dict_path)
-        #for sam_path in sam_paths:
-        #    picardtools.merge_sams([seq_dict_path, sam_path], sam_path)
+        #Step: Add sequence dicts.
+        print "+++ Adding sequence dictionaries to: {}".format(", ".join(sam_paths))
+        sd_sam_paths = add_sequence_dict(fasta_path, sam_paths, step_2_dir)
 
         #Step: Picardtools: Add read groups.
         print "+++ Adding read groups to: {}".format(", ".join(sam_paths))
-        read_group_sam_paths = add_read_groups(sam_paths, step_2_dir)
+        read_group_sam_paths = add_read_groups(sd_sam_paths, step_2_dir)
 
         #Step: Samtools: BAM(s)
         bam_paths = convert_sam_to_bam(read_group_sam_paths, step_2_dir)
