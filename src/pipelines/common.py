@@ -259,8 +259,6 @@ def ssaha2_alignment(args):
             print cmd
             if not os.path.exists(sam_path): os.system(cmd)
 
-        sam_paths = [os.path.join(step_2_dir, ssaha2_arg[1]) for ssaha2_arg in ssaha2_args]
-
         #seq_dict_path = os.path.join(step_2_dir, "ref_dict.sam")
         #print "+++ Creating sequence dictionary: ", seq_dict_path
         #picardtools.create_sequence_dictionary(fasta_path, seq_dict_path)
