@@ -22,6 +22,7 @@ setup(name = "dcamp",
                                                   "share/picard_tools/MarkDuplicates.jar", 
                                                   "share/picard_tools/CreateSequenceDictionary.jar",
                                                   "share/picard_tools/SortSam.jar",
+                                                  "share/picard_tools/MergeSamFiles.jar",
                                                   "share/picard_tools/ValidateSamFile.jar"]),
                     ("share/dcamp/dcamp", ["share/dcamp/style.css"])]
       )#End setup.
