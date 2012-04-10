@@ -186,7 +186,7 @@ def add_sequence_dict(ref_path, sam_paths, output_dir):
     sd_sam_paths = map(lambda sam_path:os.path.join(output_dir, "SD_{}".format(os.path.basename(sam_path))), sam_paths)
 
     #Place header info at start of files.
-    map(lambda sd_sam_path: picardtools(ref_path, sd_sam_path), sd_sam_paths)
+    map(lambda sd_sam_path: picardtools.create_sequence_dictionary(ref_path, sd_sam_path), sd_sam_paths)
 
     #Append the alignments.
     for sd_sam_path, sam_path in zip(sd_sam_paths, sam_paths):
@@ -234,19 +234,42 @@ def bowtie_alignment(args):
 
     return fasta_path, sorted_bam_path
 
+def prepare_alignment(fasta_path, sam_paths, output_dir, add_sequence_dicts = False):
+    if not os.path.exists(output_dir): os.makedirs(output_dir)
+
+    #Step: Add sequence dicts.
+    if add_sequence_dict:
+        print "+++ Adding sequence dictionaries to: {}".format(", ".join(sam_paths))
+        sam_paths = add_sequence_dict(fasta_path, sam_paths, output_dir)
+
+    #Step: Picardtools: Add read groups.
+    print "+++ Adding read groups to: {}".format(", ".join(sam_paths))
+    sam_paths = add_read_groups(sam_paths, output_dir)
+
+    #Step: Samtools: BAM(s)
+    print "+++ Converting to BAM format: {}".format(", ".join(sam_paths))
+    bam_paths = convert_sam_to_bam(sam_paths, output_dir)
+
+    #Step: Sort BAM(s)
+    print "+++ Sorting: {}".format(", ".join(bam_paths))
+    bam_paths = sort_bams(bam_paths, output_dir)
+
+    #Step: Samtools: Merge sorted BAMs, return bam file if there is only one.
+    bam_path = handle_multiple_bams(sam_paths, bam_paths, output_dir)
+
+    return bam_path
+
 def ssaha2_alignment(args):
     fasta_path = prepare_reference(args, "01_reference_conversion")
 
     step_2_dir = os.path.join(args.output_dir, "02_reference_alignment")
     step_2_done_file = os.path.join(step_2_dir, "create_alignment.done")
 
-    sorted_bam_path = ""
+    bam_path = ""
     if not os.path.exists(step_2_done_file):
         if not os.path.exists(step_2_dir): os.makedirs(step_2_dir)
 
-        cmd = "samtools faidx {}".format(fasta_path)
-        print cmd
-        os.system(cmd)
+        samtools.faidx(fasta_path)
 
         built_reference_path = fasta_path.replace(".fasta", "")
         cmd = "ssaha2Build -rtype solexa -skip 1 -save {} {}".format(built_reference_path, fasta_path)
@@ -261,33 +284,18 @@ def ssaha2_alignment(args):
             print cmd
             if not os.path.exists(sam_path): os.system(cmd)
 
-        #Step: Add sequence dicts.
-        print "+++ Adding sequence dictionaries to: {}".format(", ".join(sam_paths))
-        sd_sam_paths = add_sequence_dict(fasta_path, sam_paths, step_2_dir)
-
-        #Step: Picardtools: Add read groups.
-        print "+++ Adding read groups to: {}".format(", ".join(sam_paths))
-        read_group_sam_paths = add_read_groups(sd_sam_paths, step_2_dir)
-
-        #Step: Samtools: BAM(s)
-        bam_paths = convert_sam_to_bam(read_group_sam_paths, step_2_dir)
-
-        #Step: Sort
-        sorted_bam_paths = sort_bams(bam_paths, step_2_dir)
-
-        #Step: Samtools: Merge sorted BAMs, return bam file if there is only one.
-        sorted_bam_path = handle_multiple_bams(read_group_sam_paths, sorted_bam_paths, step_2_dir)
+        bam_path = prepare_alignment(fasta_path, sam_paths, step_2_dir, True)
 
         #Step: Mark step as completed.
-        p.dump(sorted_bam_path, open(step_2_done_file, 'w'))
+        p.dump(bam_path, open(step_2_done_file, 'w'))
 
     else:
         print "++Reference alignment file has already been completed."
-        sorted_bam_path = p.load(open(step_2_done_file, 'r'))
-    assert os.path.exists(sorted_bam_path) and sorted_bam_path.endswith(".bam")
+        bam_path = p.load(open(step_2_done_file, 'r'))
+    assert os.path.exists(bam_path) and bam_path.endswith(".bam")
 
-    print fasta_path, sorted_bam_path
-    return fasta_path, sorted_bam_path
+    print fasta_path, bam_path
+    return fasta_path, bam_path
 
 
 
