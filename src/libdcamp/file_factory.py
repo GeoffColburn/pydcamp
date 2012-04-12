@@ -52,10 +52,6 @@ class FileFactory:
                     gd = GenomeDiff(path)
                     header_info = gd.header_info()
                     assert "TP|FN|FP" in header_info.other
-                    validation = header_info.other["TP|FN|FP"].split('|')
-                    tp = validation[0]
-                    fn = validation[1]
-                    fp = validation[2]
 
                     for mut_type in mut_types:
                         n_tp = float(len([mut for mut in gd[mut_type] if "validation" in mut and mut["validation"] == "TP"]))
@@ -64,11 +60,9 @@ class FileFactory:
                         total = float(n_tp + n_fn + n_fp)
                         value = ""
                         if total:
-                            tdr = float(n_tp / total) * 100.0
-                            tdr = round(tdr, 1)
-                            value = tdr
+                            value = "{}|{}|{}".format(n_tp, n_fn, n_fp)
                         else:
-                            value = '-'
+                            value = "-"
 
                         table.write("\t{}".format(value))
 
