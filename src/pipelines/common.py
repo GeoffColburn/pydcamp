@@ -257,6 +257,10 @@ def prepare_alignment(fasta_path, sam_paths, output_dir, add_sequence_dicts = Fa
     #Step: Samtools: Merge sorted BAMs, return bam file if there is only one.
     bam_path = handle_multiple_bams(sam_paths, bam_paths, output_dir)
 
+    #Step:Sort Merged BAM(s)
+    if len(bam_paths) > 1:
+        bam_path = sort_bams([bam_path], output_dir)
+
     return bam_path
 
 def ssaha2_alignment(args):
