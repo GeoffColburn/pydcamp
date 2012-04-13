@@ -75,30 +75,11 @@ def handle_logs(test_paths, force_overwrite):
 
     wrangler = FileWrangler(test_paths, "output/output.gd")
 
-    for test_path in test_paths:
-        log_path_fmt = os.path.join(test_path.replace(settings.output, settings.log), "{}.log.txt")
-
-
-
-
-
-    
-
-    #wrangler = FileWrangler([test_path], "output/output.gd")
-    #
-    #if not os.path.exists(settings.job_dir):
-    #    os.makedirs(settings.job_dir)
-
-
-    #for job_id, run_id, test_gd in wrangler:
-    #    ctrl_gd = settings.ctrl_gd_fmt.format(run_id)
-    #    ref_seqs = GenomeDiff(ctrl_gd).ref_sequence_file_paths(settings.downloads)
-
-    #    results = settings.job_paths(job_id, run_id)
-    #    handle_gd(ctrl_gd, test_gd, ref_seqs, results, force_overwrite)
-    #    job_paths.append(results[3])
-
-    #print "***End normalizing and comparing genome diffs."
-    #return job_paths
+    for job_id, run_id, test_gd in wrangler:
+        #Create log path string, depending on if the run completed or not.
+        log_path = "log.txt" if os.path.exists(test_gd) else "error_log.txt"
+        log_path = os.path.join(settings.job_paths(job_id, run_id)[3], log_path)
+        #Copy log to above path
+        shutil.copy2(settings.log_fmt.format(job_id, run_id), log_path)
 
 

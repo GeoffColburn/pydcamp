@@ -150,6 +150,7 @@ def do_freebayes(args):
 def do_gatk(args):
     fasta_path, sorted_bam_path = pipelines.common.ssaha2_alignment(args)
 
+
     #Gatk
     #Step 3
     step_3_dir = os.path.join(args.output_dir, "03_gatk")
@@ -264,6 +265,9 @@ def do_create_simulated_gds(args):
 
 def do_test(args): pass
 
+def do_prepare_alignment(args): 
+    pipelines.common.prepare_alignment(args.fasta_path, args.sam_paths, args.output_dir)
+
 def main():
     main_parser = argparse.ArgumentParser()
     subparser = main_parser.add_subparsers()
@@ -368,6 +372,13 @@ def main():
     sim_gd_parser.add_argument("--read-key", dest = "read_key", default = "BarrickLab-Private")
     sim_gd_parser.add_argument("--read-prefix", dest = "read_prefix", default = "genomes/simulated")
     sim_gd_parser.set_defaults(func = do_create_simulated_gds)
+
+    #prepare alignment
+    prepare_alignment_parser = subparser.add_parser("prep-alignment")
+    prepare_alignment_parser.add_argument("-r", dest = "fasta_path")
+    prepare_alignment_parser.add_argument("-o", dest = "output_dir", default = ".")
+    prepare_alignment_parser.add_argument("sam_paths", nargs = '+', default = None)
+    prepare_alignment_parser.set_defaults(func = do_test)
 
     #testing
     testing_parser = subparser.add_parser("test")

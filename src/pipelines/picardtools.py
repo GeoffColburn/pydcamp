@@ -42,6 +42,6 @@ def sort_sam(aln_path, output_aln_path, sort_option = "coordinate"):
 def merge_sams(sam_paths, output, merge_seq_dicts = True):
     cmd = "java -jar {} INPUT={} OUTPUT={} MERGE_SEQUENCE_DICTIONARIES={}".format(_MERGE_SAMS," INPUT=".join(sam_paths), output, "true" if merge_seq_dicts else "false")
     assert not os.system(cmd), "Command: {}".format(cmd) 
-    return output_aln_path
+    return output
 
 

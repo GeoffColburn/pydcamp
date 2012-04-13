@@ -118,7 +118,7 @@ def convert_sam_to_bam(sam_paths, output_dir):
     assert len(bam_paths)
     return bam_paths
 
-def sort_bams(bam_paths, output_dir):
+def sort_alignments(bam_paths, output_dir):
     sorted_bam_paths = list()
     for bam_path in bam_paths:
         bam_sorted_prefix = os.path.join(output_dir, "sorted_{}".format(libdcamp.common.get_base_name(bam_path)))
@@ -169,7 +169,7 @@ def convert_sam_to_bam(sam_paths, output_dir = "02_reference_alignment"):
     assert len(bam_paths)
     return bam_paths
 
-def sort_bams(bam_paths, output_dir):
+def sort_alignments(bam_paths, output_dir):
     sorted_bam_paths = list()
     for bam_path in bam_paths:
         bam_sorted_prefix = os.path.join(output_dir, "sorted_{}".format(libdcamp.common.get_base_name(bam_path)))
@@ -226,7 +226,7 @@ def bowtie_alignment(args):
         #Step: Samtools: BAM(s)
         bam_path = convert_sam_to_bam([read_group_sam_path], step_2_dir)[0]
 
-        sorted_bam_path = sort_bams([bam_path], step_2_dir)
+        sorted_bam_path = sort_alignments([bam_path], step_2_dir)
     else:
         print "++Reference alignment file has already been completed."
         sorted_bam_path = p.load(open(step_2_done_file, 'r'))
@@ -252,14 +252,14 @@ def prepare_alignment(fasta_path, sam_paths, output_dir, add_sequence_dicts = Fa
 
     #Step: Sort BAM(s)
     print "+++ Sorting: {}".format(", ".join(bam_paths))
-    bam_paths = sort_bams(bam_paths, output_dir)
+    bam_paths = sort_alignments(bam_paths, output_dir)
 
     #Step: Samtools: Merge sorted BAMs, return bam file if there is only one.
     bam_path = handle_multiple_bams(sam_paths, bam_paths, output_dir)
 
     #Step:Sort Merged BAM(s)
     if len(bam_paths) > 1:
-        bam_path = sort_bams([bam_path], output_dir)
+        bam_path = sort_alignments([bam_path], output_dir)
 
     return bam_path
 
@@ -334,7 +334,7 @@ def create_alignment(args, fasta_path, output_dir):
         #Step: Samtools: Sort BAM(s)
         sorted_bam_paths = list()
         if args.sort_bam and args.sort_bam == True:
-            sorted_bam_paths = sort_bams(bam_paths, step_2_dir)
+            sorted_bam_paths = sort_alignments(bam_paths, step_2_dir)
         else:
             sorted_bam_paths = bam_paths
 
