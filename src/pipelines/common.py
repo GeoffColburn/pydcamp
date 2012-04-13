@@ -118,7 +118,7 @@ def convert_sam_to_bam(sam_paths, output_dir):
     assert len(bam_paths)
     return bam_paths
 
-def sort_alignments(bam_paths, output_dir):
+def sort_bams(bam_paths, output_dir):
     sorted_bam_paths = list()
     for bam_path in bam_paths:
         bam_sorted_prefix = os.path.join(output_dir, "sorted_{}".format(libdcamp.common.get_base_name(bam_path)))
@@ -165,11 +165,11 @@ def convert_sam_to_bam(sam_paths, output_dir = "02_reference_alignment"):
         bam_paths.append(bam_path)
         if os.path.exists(bam_path): continue
         
-        samtools.view(bam_path, sam_path)
+        samtools.view(sam_path, sam_path)
     assert len(bam_paths)
     return bam_paths
 
-def sort_alignments(bam_paths, output_dir):
+def sort_bams(bam_paths, output_dir):
     sorted_bam_paths = list()
     for bam_path in bam_paths:
         bam_sorted_prefix = os.path.join(output_dir, "sorted_{}".format(libdcamp.common.get_base_name(bam_path)))
@@ -181,6 +181,30 @@ def sort_alignments(bam_paths, output_dir):
         picardtools.sort_sam(bam_path, bam_sorted_path, "coordinate")
     assert len(sorted_bam_paths)
     return sorted_bam_paths
+
+def sort_bam(bam_path, output_dir):
+    sorted_bam_path = os.path.join(output_dir, "sorted_" + os.path.basename(bam_path))
+    if not os.path.exists(bam_sorted_path): 
+        picardtools.sort_sam(bam_path, sorted_bam_path, "coordinate")
+    return sorted_bam_path
+
+def sort_sams(sam_paths, output_dir):
+    sorted_sam_paths = list()
+    for sam_path in sam_paths:
+        sam_sorted_prefix = os.path.join(output_dir, "sorted_{}".format(libdcamp.common.get_base_name(sam_path)))
+        sam_sorted_path = "{}.sam".format(sam_sorted_prefix)
+        
+        sorted_sam_paths.append(sam_sorted_path)
+        if os.path.exists(sam_sorted_path): continue
+        
+        picardtools.sort_sam(sam_path, sam_sorted_path, "coordinate")
+    assert len(sorted_sam_paths)
+    return sorted_sam_paths
+
+def merge_sams(sam_paths, output_dir):
+    merged_sam = os.path.join(output_dir, "merged.sam")
+    picardtools.merge_sams(sam_paths, merged_sam)
+    return merged_sam
 
 def add_sequence_dict(ref_path, sam_paths, output_dir):
     sd_sam_paths = map(lambda sam_path:os.path.join(output_dir, "SD_{}".format(os.path.basename(sam_path))), sam_paths)
@@ -226,7 +250,7 @@ def bowtie_alignment(args):
         #Step: Samtools: BAM(s)
         bam_path = convert_sam_to_bam([read_group_sam_path], step_2_dir)[0]
 
-        sorted_bam_path = sort_alignments([bam_path], step_2_dir)
+        sorted_bam_path = sort_bams([bam_path], step_2_dir)
     else:
         print "++Reference alignment file has already been completed."
         sorted_bam_path = p.load(open(step_2_done_file, 'r'))
@@ -246,20 +270,21 @@ def prepare_alignment(fasta_path, sam_paths, output_dir, add_sequence_dicts = Fa
     print "+++ Adding read groups to: {}".format(", ".join(sam_paths))
     sam_paths = add_read_groups(sam_paths, output_dir)
 
-    #Step: Samtools: BAM(s)
+    #Step: Picardtools: Sort.
+    print "+++ Sorting: {}".format(", ".join(sam_paths))
+    sam_paths = sort_sams(sam_paths, output_dir)
+
+    #Step: Picardtools: Merge.
+    print "+++ Merging: {}".format(", ".join(sam_paths))
+    sam_path = sam_paths[0] if len(sam_paths) == 1 else merge_sams(sam_paths, output_dir)
+
+    #Step: Samtools: BAM
     print "+++ Converting to BAM format: {}".format(", ".join(sam_paths))
-    bam_paths = convert_sam_to_bam(sam_paths, output_dir)
+    bam_path = samtools.view(sam_path, sam_path.replace(".sam", ".bam"))
 
-    #Step: Sort BAM(s)
+    #Step: Sort BAM
     print "+++ Sorting: {}".format(", ".join(bam_paths))
-    bam_paths = sort_alignments(bam_paths, output_dir)
-
-    #Step: Samtools: Merge sorted BAMs, return bam file if there is only one.
-    bam_path = handle_multiple_bams(sam_paths, bam_paths, output_dir)
-
-    #Step:Sort Merged BAM(s)
-    if len(bam_paths) > 1:
-        bam_path = sort_alignments([bam_path], output_dir)
+    bam_path = sort_bam(bam_paths, output_dir)
 
     return bam_path
 
@@ -334,7 +359,7 @@ def create_alignment(args, fasta_path, output_dir):
         #Step: Samtools: Sort BAM(s)
         sorted_bam_paths = list()
         if args.sort_bam and args.sort_bam == True:
-            sorted_bam_paths = sort_alignments(bam_paths, step_2_dir)
+            sorted_bam_paths = sort_bams(bam_paths, step_2_dir)
         else:
             sorted_bam_paths = bam_paths
 

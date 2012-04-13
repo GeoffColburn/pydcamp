@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 import os
 
-def view(bam_path, sam_path):
+def view(sam_path, bam_path):
     cmd = "samtools-0.1.18 view -hbS -o {} {}".format(bam_path, sam_path)
     print cmd
     assert not os.system(cmd) 
-    return sam_path
+    return bam_path
 
 def sort(bam_path, bam_sorted_prefix):       
     cmd = "samtools-0.1.18 sort {} {}".format(bam_path, bam_sorted_prefix)
