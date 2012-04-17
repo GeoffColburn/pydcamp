@@ -263,6 +263,9 @@ def do_create_simulated_gds(args):
         for line in lines:
             fout.write(line)
 
+def do_prepare_alignment(args):
+    pipelines.common.prepare_alignment(args.fasta_path, args.sam_paths, args.output_dir, True)
+
 def do_test(args): pass
 
 def do_prepare_alignment(args): 
@@ -378,7 +381,7 @@ def main():
     prepare_alignment_parser.add_argument("-r", dest = "fasta_path")
     prepare_alignment_parser.add_argument("-o", dest = "output_dir", default = ".")
     prepare_alignment_parser.add_argument("sam_paths", nargs = '+', default = None)
-    prepare_alignment_parser.set_defaults(func = do_test)
+    prepare_alignment_parser.set_defaults(func = do_prepare_alignment)
 
     #testing
     testing_parser = subparser.add_parser("test")

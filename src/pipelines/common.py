@@ -184,7 +184,7 @@ def sort_bams(bam_paths, output_dir):
 
 def sort_bam(bam_path, output_dir):
     sorted_bam_path = os.path.join(output_dir, "sorted_" + os.path.basename(bam_path))
-    if not os.path.exists(bam_sorted_path): 
+    if not os.path.exists(sorted_bam_path): 
         picardtools.sort_sam(bam_path, sorted_bam_path, "coordinate")
     return sorted_bam_path
 
@@ -203,7 +203,8 @@ def sort_sams(sam_paths, output_dir):
 
 def merge_sams(sam_paths, output_dir):
     merged_sam = os.path.join(output_dir, "merged.sam")
-    picardtools.merge_sams(sam_paths, merged_sam)
+    if not os.path.exists(merged_sam):
+        picardtools.merge_sams(sam_paths, merged_sam)
     return merged_sam
 
 def add_sequence_dict(ref_path, sam_paths, output_dir):
@@ -214,8 +215,10 @@ def add_sequence_dict(ref_path, sam_paths, output_dir):
 
     #Append the alignments.
     for sd_sam_path, sam_path in zip(sd_sam_paths, sam_paths):
+        if os.path.exists(sd_sam_path): continue
         sd_sam_file = open(sd_sam_path, 'a')
-        for line in open(sam_path, 'r').readlines():
+        sam_file = open(sam_path, 'r')
+        for line in sam_file:
             sd_sam_file.write(line)
 
     return sd_sam_paths
@@ -280,11 +283,13 @@ def prepare_alignment(fasta_path, sam_paths, output_dir, add_sequence_dicts = Fa
 
     #Step: Samtools: BAM
     print "+++ Converting to BAM format: {}".format(", ".join(sam_paths))
-    bam_path = samtools.view(sam_path, sam_path.replace(".sam", ".bam"))
+    bam_path = sam_path.replace(".sam", ".bam")
+    if not os.path.exists(bam_path):
+        bam_path = samtools.view(sam_path, bam_path)
 
     #Step: Sort BAM
-    print "+++ Sorting: {}".format(", ".join(bam_paths))
-    bam_path = sort_bam(bam_paths, output_dir)
+    print "+++ Sorting: {}".format(bam_path)
+    bam_path = sort_bam(bam_path, output_dir)
 
     return bam_path
 
