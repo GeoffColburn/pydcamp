@@ -215,7 +215,6 @@ def add_sequence_dict(ref_path, sam_paths, output_dir):
 
     #Append the alignments.
     for sd_sam_path, sam_path in zip(sd_sam_paths, sam_paths):
-        if os.path.exists(sd_sam_path): continue
         sd_sam_file = open(sd_sam_path, 'a')
         sam_file = open(sam_path, 'r')
         for line in sam_file:
