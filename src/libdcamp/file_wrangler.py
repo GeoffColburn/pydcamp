@@ -4,6 +4,9 @@ import glob
 from collections import defaultdict
 
 
+def tree(): return defaultdict(tree)
+
+
 class FileWrangler:
     def __init__(self, dir_paths, key):
         #Path to wrangle/search for.
@@ -48,4 +51,40 @@ class FileWrangler:
             return self.data_dict[job_id][run_id]
         else:
             return None
+
+class Wrangler(defaultdict):
+    def __init__(self, dir_paths, key):
+        defaultdict.__init__(self, dict)
+        self.data_list = list()
+        dir_paths = [os.path.join(dir_path.strip('/'), key.strip('/')) for dir_path in dir_paths]
+        for dir_path in dir_paths:
+            for file_path in glob.glob(dir_path):
+                tokens = file_path.split('/')
+                comp_gd  = tokens.pop()
+                run_name = tokens.pop()
+                pipeline = tokens.pop()
+                self[pipeline][run_name] = comp_gd
+        for pipeline in self.keys():
+            for run_name, file_path in self[pipeline].iteritems():
+                self.data_list.append((pipeline, run_name, file_path))
+
+    def __iter__(self):
+        return self.data_list.__iter__()
+
+    def file_exists(self, pipeline, run_name):
+        return pipeline in self.keys() and run_name in self[pipeline].keys()
+
+    def get_file(self, pipeline, run_name):
+        if self.file_exists(pipeline, run_name):
+            return self[pipeline][run_name]
+        else:
+            return None
+
+    @staticmethod
+    def comp_gds(dir_paths):
+        return Wrangler(dir_paths, "*/*/comp.gd")
+    @staticmethod
+    def test_gds(dir_paths):
+        return Wrangler(dir_paths, "*/*/output/output.gd")
+
 

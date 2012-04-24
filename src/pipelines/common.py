@@ -292,10 +292,10 @@ def prepare_alignment(fasta_path, sam_paths, output_dir, add_sequence_dicts = Fa
 
     return bam_path
 
-def ssaha2_alignment(args):
-    fasta_path = prepare_reference(args, "01_reference_conversion")
+def ssaha2_alignment(args, step_1 = "01_reference_conversion", step_2 = "02_reference_alignment"):
+    fasta_path = prepare_reference(args, step_1)
 
-    step_2_dir = os.path.join(args.output_dir, "02_reference_alignment")
+    step_2_dir = os.path.join(args.output_dir, step_2)
     step_2_done_file = os.path.join(step_2_dir, "create_alignment.done")
 
     bam_path = ""

@@ -90,7 +90,7 @@ def do_samtools(args):
 def do_breakdancer(args): 
     """Believe we need to keep all files in one directory, although it's not mentioned,
     breakdancer may look at files other than the .bam file."""
-    fasta_path, sorted_bam_path = pipelines.common.ssaha2_alignment(args)
+    fasta_path, sorted_bam_path = pipelines.common.ssaha2_alignment(args, "01_All", "01_All")
     sorted_bam_file = os.path.basename(sorted_bam_path)
 
     step_3_dir = os.path.join(args.output_dir, "01_All")
@@ -295,6 +295,15 @@ def do_mut_table(args):
                 union_table[test][name] = union_gd
 
     html.mutation_rate_table(args.output, union_table)
+
+def do_ins_graph(args):
+    from libdcamp.file_wrangler import Wrangler
+    wrangler = Wrangler.comp_gds(args.inputs)
+    for i in wrangler:
+        print i
+
+
+
     
 
 
@@ -305,6 +314,7 @@ def do_mut_table(args):
 def main():
     main_parser = argparse.ArgumentParser()
     subparser = main_parser.add_subparsers()
+
 
     #results.
     results_parser = subparser.add_parser("results")
@@ -417,6 +427,11 @@ def main():
     mut_table_parser.add_argument("inputs", nargs = '+', default = None)#ie: meyer_2012, woods_2011
     mut_table_parser.set_defaults(func = do_mut_table)
 
+    #ins-graph
+    mut_table_parser = subparser.add_parser("ins-graph")
+    mut_table_parser.add_argument("-o", dest = "output", required = True)
+    mut_table_parser.add_argument("inputs", nargs = '+', default = None)
+    mut_table_parser.set_defaults(func = do_ins_graph)
 
 
     #testing
