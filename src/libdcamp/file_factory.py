@@ -5,9 +5,9 @@ import re
 from collections import defaultdict
 
 from libdcamp.settings import Settings
-from breseq.genome_diff import GenomeDiff
-from breseq.diff_entry import DiffEntry
 from libdcamp.file_wrangler import FileWrangler
+
+from breseq.genome_diff import *
 
 class FileFactory:
     def __init__(self):
@@ -77,6 +77,12 @@ class FileFactory:
 
                 table.write("\n")
         table.close()
+
+
+
+
+    
+
 
 
 

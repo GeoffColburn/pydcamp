@@ -224,7 +224,7 @@ class page:
         self.content.append( text )
 
 
-    def init( self, lang='en', css=None, metainfo=None, title=None, header=None,
+    def init( self, lang='en', css=None, metainfo=None, title=None, header=None, css_string = None,
               footer=None, charset=None, encoding=None, doctype=None, bodyattrs=None, script=None ):
         """This method is used for complete documents with appropriate
         doctype, encoding, title, etc information. For an HTML/XML snippet
@@ -281,6 +281,10 @@ class page:
                 self.metainfo( metainfo )
             if css is not None:
                 self.css( css )
+            elif css_string is not None:
+                self.style()
+                self.add(css_string)
+                self.style.close()
             if title is not None:
                 self.title( title )
             if script is not None:

@@ -8,6 +8,8 @@ import string
 import re
 import pickle as p
 
+from collections import defaultdict
+
 
 import breseq.command
 from breseq.genome_diff import GenomeDiff
@@ -20,18 +22,20 @@ import pipelines.common
 from libdcamp.settings import Settings
 from libdcamp.html_factory import HtmlFactory
 from libdcamp.file_factory import FileFactory
+from libdcamp.file_wrangler import FileWrangler
 import libdcamp.job as job
 
 import urllib2
+import glob
 
 
                 
 def do_results(args):
     settings = Settings(args)
 
-    print "Searching for output/output.gd in paths:", ", ".join(args.test_paths)
+    print "Searching for output/output.gd in paths:", ", ".join(args.input_dirs)
 
-    job_paths = job.handle_gds(args.test_paths, args.force_overwrite)
+    job_paths = job.handle_gds(args.input_dirs, args.force_overwrite)
 
     html_factory = HtmlFactory()
     html_factory.write_index_page(job_paths)
@@ -271,19 +275,43 @@ def do_test(args): pass
 def do_prepare_alignment(args): 
     pipelines.common.prepare_alignment(args.fasta_path, args.sam_paths, args.output_dir)
 
+def do_mut_table(args):
+    import libdcamp.html_factory as html
+    union_table = defaultdict(dict)#Test/Pipeline/union.gd
+    for path in args.inputs:
+        test = path.strip('/').split('/').pop()
+        for dir in glob.glob(os.path.join(path, '*')):
+            name = dir.split('/').pop()
+            comp_gds = glob.glob(os.path.join(dir, "*/comp.gd"))
+            if comp_gds:
+                dcamp_dir = os.path.join(path, "dcamp/{}".format(name)) 
+                if not os.path.exists(dcamp_dir):
+                    os.makedirs(dcamp_dir)
+
+                union_gd = os.path.join(dcamp_dir, "union.gd")
+                if not os.path.exists(union_gd):
+                    breseq.command.gdtools_union(union_gd, comp_gds)
+
+                union_table[test][name] = union_gd
+
+    html.mutation_rate_table(args.output, union_table)
+    
+
+
+
+
+
+
 def main():
     main_parser = argparse.ArgumentParser()
     subparser = main_parser.add_subparsers()
 
     #results.
     results_parser = subparser.add_parser("results")
-    results_parser.add_argument("--data",      dest = "data",      default = "01_Data")
-    results_parser.add_argument("--downloads", dest = "downloads", default = "02_Downloads")
-    results_parser.add_argument("--output",    dest = "output",    default = "03_Output")
-    results_parser.add_argument("--logs",      dest = "logs",      default = "04_Logs")
-    results_parser.add_argument("--results",   dest = "results",   default = "05_Results")
-    results_parser.add_argument("--name",      dest = "job_name", required = True)
-    results_parser.add_argument("test_paths", nargs = '+')
+    results_parser.add_argument("--data",      dest = "data",       default = "01_Data")
+    results_parser.add_argument("--downloads", dest = "downloads",  default = "02_Downloads")
+    results_parser.add_argument("-o",          dest = "output_dir", required = True)
+    results_parser.add_argument("input_dirs", nargs = '+')
     results_parser.add_argument("-f", action = "store_true", dest = "force_overwrite", default = False)
     results_parser.set_defaults(func = do_results)
 
@@ -382,6 +410,14 @@ def main():
     prepare_alignment_parser.add_argument("-o", dest = "output_dir", default = ".")
     prepare_alignment_parser.add_argument("sam_paths", nargs = '+', default = None)
     prepare_alignment_parser.set_defaults(func = do_prepare_alignment)
+
+    #weights_table
+    mut_table_parser = subparser.add_parser("mut-table")
+    mut_table_parser.add_argument("-o", dest = "output", required = True)
+    mut_table_parser.add_argument("inputs", nargs = '+', default = None)#ie: meyer_2012, woods_2011
+    mut_table_parser.set_defaults(func = do_mut_table)
+
+
 
     #testing
     testing_parser = subparser.add_parser("test")

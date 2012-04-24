@@ -47,7 +47,19 @@ def genome_diff_filter(gd_path, output_gd_path, mut_types, filters):
                                                              output_gd_path,\
                                                              " -m ".join(mut_types),\
                                                              " ".join(filters))
-
     print cmd
     os.system(cmd)
     return output_gd_path
+
+
+def gdtools_weights(output, inputs):
+    cmd = "gdtools weights -o {} {}".format(output, " ".join(inputs))
+    print cmd
+    os.system(cmd)
+    return output
+
+def gdtools_union(output, inputs):
+    cmd = "gdtools union -o {} {}".format(output, " ".join(inputs))
+    print cmd
+    os.system(cmd)
+    return output

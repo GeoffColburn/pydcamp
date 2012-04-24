@@ -12,16 +12,11 @@ class Settings:
         #Directories setup for dcamp.
         self.data      = args.data       #Holds control gds.
         self.downloads = args.downloads  #Holds Genbank and Fastq files.
-        self.output    = args.output     #Holds output from pipeline runs, contains test gds.
-        self.logs      = args.logs       #Holds sterr/stdout logs from pipelines runs.
-        self.results   = args.results    #Holds post-pipeline job analysis files.
-        
         #Output directories from pipelines.
-        self.test_paths = args.test_paths 
+        self.input_dirs = args.input_dirs 
 
         #Paths for this job, which will be put in the results directory.
-        self.job_name = args.job_name 
-        self.job_dir = os.path.join(self.results, self.job_name)
+        self.job_dir = args.output_dir
         self.job_css_path = os.path.join(self.job_dir, "dcamp/style.css")
         self.job_index_path = os.path.join(self.job_dir, "index.html")
         self.job_make_test_path = os.path.join(self.job_dir, "make_test.html")
@@ -29,17 +24,10 @@ class Settings:
         self.job_mutation_rates_table_path = os.path.join(self.job_dir, "dcamp/mutation_rates.txt")
 
         self.shared_dir_path = os.path.join(os.environ["HOME"], "local/share/dcamp")
-        self.shared_css_style_pth = os.path.join(self.shared_dir_path, "dcamp/style.css")
+        self.shared_css_style_path = os.path.join(self.shared_dir_path, "dcamp/style.css")
 
         #Data:
         self.ctrl_gd_fmt = os.path.join(self.data, "{}.gd")
-
-        #Output:
-        self.output_gd_fmt = os.path.join(self.output, "{}/{}/output/output.gd")
-        self.output_vcf_fmt = os.path.join(self.output, "{}/{}/output/output.vcf")
-
-        #Logs:
-        self.log_fmt = os.path.join(self.output.replace("03_Output","04_Logs"), "{}/{}.log.txt")
 
         Settings.__instance = self
 

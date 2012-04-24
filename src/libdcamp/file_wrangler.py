@@ -22,7 +22,6 @@ class FileWrangler:
         for dir_path in dir_paths:
             dir_path = dir_path.strip('/')
             job_id = dir_path.split('/').pop()
-            print job_id
             for path in glob.glob(self.file_wrangle_fmt.format(dir_path, '*')):
                 run_id = path[len(dir_path) + 1:].split('/').pop(0)
                 self.data_dict[job_id][run_id] = path
@@ -49,5 +48,4 @@ class FileWrangler:
             return self.data_dict[job_id][run_id]
         else:
             return None
-
 
