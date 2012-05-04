@@ -340,6 +340,7 @@ def bwa_alignment(args, fasta_path, output_dir):
         print "++Processing and creating reference alignment file."
         if not os.path.exists(step_2_dir): os.makedirs(step_2_dir)
 
+        bwa_index(fasta, output_dir)
         bam_paths = list()
         #Read file input.
         if args.read_paths:
