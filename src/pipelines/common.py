@@ -223,6 +223,8 @@ def add_sequence_dict(ref_path, sam_paths, output_dir):
     return sd_sam_paths
 
 def bowtie_alignment(args):
+    import time
+    start = time.time()
     fasta_path = prepare_reference(args, "01_reference_conversion")
 
     output_dir = "02_reference_alignment"
@@ -257,6 +259,9 @@ def bowtie_alignment(args):
         print "++Reference alignment file has already been completed."
         sorted_bam_path = p.load(open(step_2_done_file, 'r'))
     assert os.path.exists(sorted_bam_path) and sorted_bam_path.endswith(".bam")
+
+    elapsed = (time.time() - start) / 60
+    print "Bowtie Alignment Time:", elapsed, "minutes."
 
     return fasta_path, sorted_bam_path
 
@@ -340,38 +345,19 @@ def bwa_alignment(args, fasta_path, output_dir):
         print "++Processing and creating reference alignment file."
         if not os.path.exists(step_2_dir): os.makedirs(step_2_dir)
 
-        bwa_index(fasta, output_dir)
+        bwa_index(fasta_path, step_2_dir)
         bam_paths = list()
-        #Read file input.
-        if args.read_paths:
-            #Step: BWA: SAI(s)
-            sam_args = bwa_aln(fasta_path, args.read_paths, step_2_dir)
-                    
-            #Step: BWA: SAM(s)
-            sam_paths = list()
-            if args.pair_ended == True:
-                sam_paths = bwa_sampe(sam_args, step_2_dir)
-            else:
-                sam_paths = bwa_samse(sam_args, step_2_dir)
-        
-            #Step: Picardtools: Add read groups.
-            read_group_sam_paths = add_read_groups(sam_paths, step_2_dir)
-
-            #Step: Samtools: BAM(s)
-            bam_paths = convert_sam_to_bam(read_group_sam_paths, step_2_dir)
-
-        
-        #Step: Samtools: Sort BAM(s)
-        sorted_bam_paths = list()
-        if args.sort_bam and args.sort_bam == True:
-            sorted_bam_paths = sort_bams(bam_paths, step_2_dir)
+        #Step: BWA: SAI(s)
+        sam_args = bwa_aln(fasta_path, args.read_paths, step_2_dir)
+                
+        #Step: BWA: SAM(s)
+        sam_paths = list()
+        if args.pair_ended == True:
+            sam_paths = bwa_sampe(sam_args, step_2_dir)
         else:
-            sorted_bam_paths = bam_paths
-
-        assert sorted_bam_paths
+            sam_paths = bwa_samse(sam_args, step_2_dir)
         
-        #Step: Samtools: Merge sorted BAMs, return bam file if there is only one.
-        sorted_bam_path = handle_multiple_bams(read_group_sam_paths, sorted_bam_paths, step_2_dir)
+        sorted_bam_path = prepare_alignment(fasta_path, sam_paths, step_2_dir)
         
         #Step: Mark step as completed.
         p.dump(sorted_bam_path, open(step_2_done_file, 'w'))
