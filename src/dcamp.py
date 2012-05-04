@@ -91,6 +91,7 @@ def do_breakdancer(args):
     """Believe we need to keep all files in one directory, although it's not mentioned,
     breakdancer may look at files other than the .bam file."""
     fasta_path = pipelines.common.prepare_reference(args, "01_All")
+    pipelines.samtools.faidx(fasta_path)
     sorted_bam_path = pipelines.common.bwa_alignment(args, fasta_path, "01_All")
 
     sorted_bam_file = os.path.basename(sorted_bam_path)
