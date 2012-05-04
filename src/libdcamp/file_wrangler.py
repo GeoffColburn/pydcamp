@@ -56,17 +56,22 @@ class Wrangler(defaultdict):
     def __init__(self, dir_paths, key):
         defaultdict.__init__(self, dict)
         self.data_list = list()
+        self.job_ids = set()
+        self.run_ids = set()
+
         dir_paths = [os.path.join(dir_path.strip('/'), key.strip('/')) for dir_path in dir_paths]
         for dir_path in dir_paths:
             for file_path in glob.glob(dir_path):
                 tokens = file_path.split('/')
-                comp_gd  = tokens.pop()
-                run_name = tokens.pop()
-                pipeline = tokens.pop()
+                comp_gd  = file_path
+                run_name = tokens[-2]
+                pipeline = tokens[-3]
                 self[pipeline][run_name] = comp_gd
         for pipeline in self.keys():
+            self.job_ids.add(pipeline)
             for run_name, file_path in self[pipeline].iteritems():
                 self.data_list.append((pipeline, run_name, file_path))
+                self.run_ids.add(run_name)
 
     def __iter__(self):
         return self.data_list.__iter__()

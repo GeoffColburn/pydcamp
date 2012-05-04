@@ -90,7 +90,9 @@ def do_samtools(args):
 def do_breakdancer(args): 
     """Believe we need to keep all files in one directory, although it's not mentioned,
     breakdancer may look at files other than the .bam file."""
-    fasta_path, sorted_bam_path = pipelines.common.ssaha2_alignment(args, "01_All", "01_All")
+    fasta_path = pipelines.common.prepare_alignment(args, "01_All")
+    sorted_bam_path = pipelines.common.bwa_alignment(args, fasta_path, "01_All")
+
     sorted_bam_file = os.path.basename(sorted_bam_path)
 
     step_3_dir = os.path.join(args.output_dir, "01_All")
@@ -296,17 +298,58 @@ def do_mut_table(args):
 
     html.mutation_rate_table(args.output, union_table)
 
-def do_ins_graph(args):
+def do_mut_graph(args):
     from libdcamp.file_wrangler import Wrangler
+
+    #pipeline->mut_size->value
+    accuracy_table = defaultdict(dict)
+
+    mut = args.mut.lower()
+    cov = "80"
+
     wrangler = Wrangler.comp_gds(args.inputs)
-    for i in wrangler:
-        print i
 
+    x_axis = set()
+    for pln, run, pth in wrangler:
+        if not mut in run or not cov in run: continue
+        size = float(run.split('_')[-2])
 
+        gd = GenomeDiff(pth, header_only = True)
+        header_info = gd.header_info()
+        assert "TP|FN|FP" in header_info.other
 
+        validation = header_info.other["TP|FN|FP"].split('|')
+        tp = float(validation[0])
+        fn = float(validation[1])
+        fp = float(validation[2])
+
+        accuracy_table[pln][str(size)] = "{}".format(round(100 * tp / (fn + tp), 3))
+        x_axis.add(size)
     
+    x_axis = list(x_axis)
 
+    import matplotlib.pyplot as plt
+    #accuracy: 100 * (TP / (FN + TP))
+    for pln in accuracy_table:
+        y_axis = [float(accuracy_table[pln][str(x)]) for x in x_axis]
+        plt.plot(x_axis, y_axis, "^-", label = pln)
 
+    if (mut == "ins"):
+        plt.title("Insertions: Accuracy versus Mutation Size")
+    elif (mut == "del"): 
+        plt.title("Deletions: Accuracy versus Mutation Size")
+
+    plt.xlabel("Mutation Size (bp)")
+    plt.ylabel("Accuracy (%)")
+    plt.legend(loc = 3, frameon = False)
+    x1, x2, y1, y2 = plt.axis()
+    plt.axis((x1, x2, -10, 110))
+    #Formula
+    formula = r'$Accuracy = \frac{N_{TP}}{N_{TP} + N_{FN} + N_{FP}} * {100}$'
+    plt.text(x1 + .2, y2 / 4, formula, fontsize=14, verticalalignment='top')
+
+    plt.savefig(args.output)
+    
 
 
 
@@ -428,10 +471,11 @@ def main():
     mut_table_parser.set_defaults(func = do_mut_table)
 
     #ins-graph
-    mut_table_parser = subparser.add_parser("ins-graph")
-    mut_table_parser.add_argument("-o", dest = "output", required = True)
-    mut_table_parser.add_argument("inputs", nargs = '+', default = None)
-    mut_table_parser.set_defaults(func = do_ins_graph)
+    mut_graph_parser = subparser.add_parser("mut-graph")
+    mut_graph_parser.add_argument("-o", dest = "output", required = True)
+    mut_graph_parser.add_argument("inputs", nargs = '+', default = None)
+    mut_graph_parser.add_argument("--mut", dest = "mut")
+    mut_graph_parser.set_defaults(func = do_mut_graph)
 
 
     #testing

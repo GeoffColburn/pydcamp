@@ -143,9 +143,8 @@ def mutation_rate_table(output, union_table):
 
     page.div(id = "wrapper")
 
+    page.table()
     for test_name in union_table.keys():
-        page.table()
-
         mut_types = [type for type in DiffEntry.line_specs if len(type) == 3]
         #Header
         #First Row
@@ -195,10 +194,9 @@ def mutation_rate_table(output, union_table):
             page.td(e.a("union.gd", href = href))
 
             page.tr.close()
+        page.br()
             
-        page.table.close()
-        page.br()
-        page.br()
+    page.table.close()
 
     page.div.close()
 

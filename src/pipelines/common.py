@@ -332,7 +332,7 @@ def ssaha2_alignment(args, step_1 = "01_reference_conversion", step_2 = "02_refe
 
 
 
-def create_alignment(args, fasta_path, output_dir):
+def bwa_alignment(args, fasta_path, output_dir):
     step_2_dir = os.path.join(args.output_dir, output_dir)
     step_2_done_file = os.path.join(step_2_dir, "create_alignment.done")
     sorted_bam_path = ""
