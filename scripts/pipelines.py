@@ -59,26 +59,43 @@ def do_gbk2fasta(args):
     return
 
 def do_bowtie(args):
-    if not os.path.exists(args.output): os.makedirs(args.output)
+    bowtie(args.output, args.ref_paths, args.read_paths, args.paired_ends)
 
-    gbk_path = args.ref_paths[0]
-    fasta_path = os.path.join(args.output, "reference.fasta")
+def bowtie(output, ref_paths, read_paths, paired_ends):
+    if not os.path.exists(output): os.makedirs(output)
+
+    gbk_path = ref_paths[0]
+    fasta_path = os.path.join(output, "reference.fasta")
     common.gbk2fasta(gbk_path, fasta_path)
 
     prefix = fasta_path.replace(".fasta", "")
     cmd = "bowtie-build {} {}".format(fasta_path, prefix)
     common.system(cmd)
 
-    sam_path = os.path.join(args.output, "reference.sam")
-    cmd = "bowtie -S {} {} {}".format(prefix, ",".join(args.read_paths), sam_path) 
+    read_args = ""
+    if paired_ends == True:
+        """ 
+        Requires matched -1 file_1.read -2 file_2.read parameters.
+        Works under the assumption that user passed the read parameters in order.
+        """
+        read_args = " ".join(("-{} {}".format((i % 2) + 1, path) for i, path in enumerate(read_paths)))
+    else:
+        read_args = ",".join(read_paths)
+
+    sam_path = os.path.join(output, "reference.sam")
+    cmd = "bowtie -S {} {} {}".format(prefix, read_args, sam_path) 
     common.system(cmd)
     common.assert_file(sam_path, cmd)
 
     print "Bowtie Created: ",  sam_path
 
-
     return fasta_path, sam_path
 
+def do_sam2bam(args):
+    pass
+
+def sam2bam(output, fasta_paths, sam_path, read_group = True, sort = True):
+    pass
 
 
     
@@ -97,7 +114,7 @@ def main():
     bowtie_parser = subparser.add_parser("bowtie")
     bowtie_parser.add_argument("-o", dest = "output", required = True)
     bowtie_parser.add_argument("-r", action = "append", dest = "ref_paths", required = True)
-    bowtie_parser.add_argument("--paired-ends", action = "store_true", dest = "pair_ended", default = False)
+    bowtie_parser.add_argument("--paired-ends", action = "store_true", dest = "paired_ends", default = False)
     bowtie_parser.add_argument("read_paths", nargs = '+')
     bowtie_parser.set_defaults(func = do_bowtie)
 
