@@ -2,7 +2,7 @@
 import sys, os
     
 def convert_genbank(gbk_path, fasta_path):
-    cmd="breseq convert-genbank -i {} -f {}".format(gbk_path, fasta_path)
+    cmd="breseq convert-reference -i {} --fasta {}".format(gbk_path, fasta_path)
     print cmd
     assert not os.system(cmd), "Command: {}".format(cmd) 
     return fasta_path

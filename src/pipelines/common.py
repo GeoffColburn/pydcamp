@@ -222,6 +222,19 @@ def add_sequence_dict(ref_path, sam_paths, output_dir):
 
     return sd_sam_paths
 
+def remove_unmatched_reads(sam_path, matched_path):
+    out = open(matched_path, 'w')
+    i = 0
+    for line in open(sam_path, 'r'):
+        if line.split()[2] != '*':
+            out.write(line)
+        else:
+            ++i
+    print "Removed {} unmatched reads.".format(i)
+    return matched_path
+
+    
+
 def bowtie_alignment(args):
     import time
     start = time.time()
@@ -269,7 +282,7 @@ def prepare_alignment(fasta_path, sam_paths, output_dir, add_sequence_dicts = Fa
     if not os.path.exists(output_dir): os.makedirs(output_dir)
 
     #Step: Add sequence dicts.
-    if add_sequence_dict:
+    if add_sequence_dicts:
         print "+++ Adding sequence dictionaries to: {}".format(", ".join(sam_paths))
         sam_paths = add_sequence_dict(fasta_path, sam_paths, output_dir)
 
@@ -338,36 +351,35 @@ def ssaha2_alignment(args, step_1 = "01_reference_conversion", step_2 = "02_refe
 
 
 def bwa_alignment(args, fasta_path, output_dir):
-    step_2_dir = os.path.join(args.output_dir, output_dir)
-    step_2_done_file = os.path.join(step_2_dir, "create_alignment.done")
-    sorted_bam_path = ""
-    if not os.path.exists(step_2_done_file):
+    output_dir = os.path.join(args.output_dir, output_dir)
+    done_file = os.path.join(output_dir, "bwa.done")
+    sam_paths = list()
+    if not os.path.exists(done_file):
         print "++Processing and creating reference alignment file."
-        if not os.path.exists(step_2_dir): os.makedirs(step_2_dir)
+        if not os.path.exists(output_dir): os.makedirs(output_dir)
 
-        bwa_index(fasta_path, step_2_dir)
-        bam_paths = list()
+        bwa_index(fasta_path, output_dir)
         #Step: BWA: SAI(s)
-        sam_args = bwa_aln(fasta_path, args.read_paths, step_2_dir)
+        sam_args = bwa_aln(fasta_path, args.read_paths, output_dir)
                 
         #Step: BWA: SAM(s)
         sam_paths = list()
         if args.pair_ended == True:
-            sam_paths = bwa_sampe(sam_args, step_2_dir)
+            sam_paths = bwa_sampe(sam_args, output_dir)
         else:
-            sam_paths = bwa_samse(sam_args, step_2_dir)
-        
-        sorted_bam_path = prepare_alignment(fasta_path, sam_paths, step_2_dir)
-        
+            sam_paths = bwa_samse(sam_args, output_dir)
+
+        map(libdcamp.common.assert_file, sam_paths)
+
         #Step: Mark step as completed.
-        p.dump(sorted_bam_path, open(step_2_done_file, 'w'))
+        p.dump(sam_paths, open(done_file, 'w'))
         
     else:
         print "++Reference alignment file has already been completed."
-        sorted_bam_path = p.load(open(step_2_done_file, 'r'))
-    assert os.path.exists(sorted_bam_path) and sorted_bam_path.endswith(".bam")
+        sam_paths = p.load(open(done_file, 'r'))
+    map(libdcamp.common.assert_file, sam_paths)
     
-    return sorted_bam_path
+    return sam_paths
 
 
 

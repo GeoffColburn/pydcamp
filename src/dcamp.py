@@ -25,6 +25,8 @@ from libdcamp.file_factory import FileFactory
 from libdcamp.file_wrangler import FileWrangler
 import libdcamp.job as job
 
+import libdcamp.common as common
+
 import urllib2
 import glob
 
@@ -88,47 +90,66 @@ def do_samtools(args):
         pipelines.common.create_data_dir(args, fasta_path, sorted_bam_path)
     
 def do_breakdancer(args): 
+    if args.read_paths <= 1:
+        print "Breakdancer only works on pair-ended data, need read_1.fastq and read_2.fastq files."
+        sys.exit(-1)
+
+    #samtools.samtools_exe = "samtools-0.1.6"
+    output_dir = os.path.join(args.output_dir, "01_All")
     """Believe we need to keep all files in one directory, although it's not mentioned,
     breakdancer may look at files other than the .bam file."""
     fasta_path = pipelines.common.prepare_reference(args, "01_All")
-    pipelines.samtools.faidx(fasta_path)
-    sorted_bam_path = pipelines.common.bwa_alignment(args, fasta_path, "01_All")
+    sam_paths = pipelines.common.bwa_alignment(args, fasta_path, "01_All")
 
-    sorted_bam_file = os.path.basename(sorted_bam_path)
+    #Remove unmatched reads.
+    matched_sam_paths = map(os.path.split, sam_paths)
+    matched_sam_paths = [os.path.join(tokens[0], "matched_" + tokens[1]) for tokens in matched_sam_paths]
+    map(pipelines.common.remove_unmatched_reads, sam_paths, matched_sam_paths)
+    map(common.assert_file, matched_sam_paths)
 
-    step_3_dir = os.path.join(args.output_dir, "01_All")
-    step_3_file = os.path.join(step_3_dir, "output.done")
+    #Add read groups.
+    rg_sam_paths = map(os.path.split, matched_sam_paths)
+    rg_sam_paths = [os.path.join(tokens[0], "RG_" + tokens[1]) for tokens in rg_sam_paths]
+    map(picardtools.add_or_replace_read_groups, matched_sam_paths, rg_sam_paths)
+    map(common.assert_file, rg_sam_paths)
 
-    cfg_path = os.path.join(step_3_dir, "output.cfg")
-    ctx_path = os.path.join(step_3_dir, "output.ctx")
+    #Convert sam -> bam.
+    bam_paths = [sam_path.replace(".sam", ".bam") for sam_path in rg_sam_paths]
+    map(samtools.view, bam_paths, rg_sam_paths)
+
+    #Sort.
+    sorted_bam_prefix = map(os.path.split, bam_paths)
+    sorted_bam_prefix = [os.path.join(tokens[0], "sorted_" + tokens[1].replace(".bam", "")) for tokens in sorted_bam_prefix]
+    map(samtools.sort, bam_paths, sorted_bam_prefix)
+
+    bam_paths = [prefix + ".bam" for prefix in sorted_bam_prefix]
+
+    #TODO handle multiple bams
+    bam_path = bam_paths[0]
+    bam_basename = os.path.basename(bam_path)
+
+    cfg_path = os.path.join(output_dir, "analysis.config")
+    ctx_path = os.path.join(output_dir, "output.ctx")
     cfg_file = os.path.basename(cfg_path)
     ctx_file = os.path.basename(ctx_path) 
 
-    if not os.path.exists(step_3_file):
-        print "++Step 3 mutation predictions and output started."
-        if not os.path.exists(step_3_dir): os.makedirs(step_3_dir)
+    #MUST change into directory, due to paths set in analysis.config
+    cwd = os.getcwd()
+    os.chdir(output_dir)
+    #Breakdancer::bam2cfg.pl.
+    ##if not os.path.exists(cfg_path):
+    cmd = "bam2cfg.pl -h -g {} > {}".format(bam_basename, cfg_file)
+    common.system(cmd)
+    common.assert_file(cfg_file, cmd)
 
-        """We need to change into the directory because breakdancer outputs histogram
-        files into the current working directory."""
-        cwd = os.getcwd()
-        os.chdir(step_3_dir)
-        #Breakdancer::bam2cfg.pl.
-        ##if not os.path.exists(cfg_path):
-        cmd = "bam2cfg.pl -h -g {} > {}".format(sorted_bam_file, cfg_file)
-        print cmd           
-        os.system(cmd)
-        assert os.path.exists(cfg_file)
-
-        #Breakdancer::breakdancer_max.
-        ##if not os.path.exists(ctx_path):
-        cmd = "breakdancer_max {} > {}".format(cfg_file, ctx_file)
-        print cmd
-        os.system(cmd)
-        assert os.path.exists(ctx_file)
-        
-        os.chdir(cwd) #Change back to original cwd.
-    """To be consistent with other pipelines, copy the .cfg and .ctx file to the output 
-    directory."""
+    #Breakdancer::breakdancer_max.
+    ##if not os.path.exists(ctx_path):
+    cmd = "breakdancer_max {} > {}".format(cfg_file, ctx_file)
+    common.system(cmd)
+    common.assert_file(ctx_file, cmd)
+    
+    os.chdir(cwd) #Change back to original cwd.
+    #Copy the .cfg and .ctx file to the output directory.
     output_dir = os.path.join(args.output_dir, "output")
     if not os.path.exists(output_dir): os.makedirs(output_dir)
 
@@ -421,7 +442,7 @@ def main():
     breakdancer_parser = subparser.add_parser("breakdancer")
     breakdancer_parser.add_argument("-o", dest = "output_dir")
     breakdancer_parser.add_argument("-r", action = "append", dest = "ref_paths")
-    breakdancer_parser.add_argument("--pair-ended", action = "store_true", dest = "pair_ended", default = False)
+    breakdancer_parser.add_argument("--pair-ended", action = "store_true", dest = "pair_ended", default = True)
     breakdancer_parser.add_argument("--sort_bam", action = "store_true", dest = "sort_bam", default = True)
     breakdancer_parser.add_argument("read_paths", nargs = '+')
     breakdancer_parser.set_defaults(func = do_breakdancer)

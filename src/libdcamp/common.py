@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import os, fnmatch
+import sys
 
 def merge_files(append_file_name, read_file_name):
     file1 = open(append_file_name, 'a')
@@ -27,3 +28,23 @@ def locate(pattern, root=os.curdir):
     for path, dirs, files in os.walk(os.path.abspath(root)):
         for filename in fnmatch.filter(files, pattern):
             yield os.path.relpath(os.path.join(path, filename))
+
+
+def assert_file(path, cmd = None):
+    if not os.path.exists(path) or os.path.getsize(path) == 0:
+        print >> sys.stderr, "###ERROR"
+        print >> sys.stderr, "File not created: ", path
+        if not cmd == None:
+            print >> sys.stderr, "From command: ", cmd
+        print >> sys.stderr, "###"
+        sys.exit(-1)
+
+    return
+        
+
+def system(cmd):
+    print >> sys.stderr, cmd
+    return os.system(cmd)
+
+
+

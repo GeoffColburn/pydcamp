@@ -4,8 +4,11 @@ Install into ~/local/bin with command:
 
 
 BreakDancer:
+
+svn checkout https://breakdancer.svn.sourceforge.net/svnroot/breakdancer/
+
 Compiling cpp.
 -After downloading breakdancer you need to download samtools-0.1.6 and copy it to breakdancer/cpp/samtools-0.1.6. Compile samtools in that directory and then alter
 the Makefile include paths to the local samtools-0.1.6 directory. The Makefile should then look like so:
 	all:
-		g++ -g -Wall -O2 -I samtools-0.1.6/ BreakDancerMax.cpp AlnParser.cpp Poisson.cpp -o breakdancer_max -lm -lz -L samtools-0.1.6/ -lbam
+		g++ -g -Wall -O2 -I samtools-0.1.6/ BreakDancerMax.cpp AlnParser.cpp Poisson.cpp -o breakdancer_max -lm -L samtools-0.1.6/ -lbam -lz
