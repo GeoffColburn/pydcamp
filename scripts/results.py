@@ -16,14 +16,14 @@ def do_errors(args):
     print >> sys.stderr, "Log search:", log_search
 
     output_paths = glob.glob(output_search)
-    assert output_paths, "No output/output.gd's found for search:", output_search
+    assert output_paths, "No output/output.gd's found for search: " + output_search
 
     output_paths = (path.replace("/output/output.gd", "") for path in output_paths)
     output_paths = map(os.path.basename, output_paths)
     output_names = set(output_paths)
     
     log_paths = glob.glob(log_search)
-    assert log_paths, "No *.log.txt's found for search:", log_search
+    assert log_paths, "No *.log.txt's found for search: " + log_search
     log_paths = map(os.path.basename, log_paths)
     log_paths = (path.replace(".log.txt", "") for path in log_paths)
     log_names = set(log_paths)
