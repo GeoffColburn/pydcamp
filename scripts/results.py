@@ -8,23 +8,27 @@ def do_errors(args):
     """Compare the existence of output.gd files with that of *.log.txt, if there is not an
     output.gd for for a log file then it must have failed and needs to be brought to the
     users attention."""
-    test_search = os.path.join(args.test_dir, "*/output/output.gd")
+
+    output_search = os.path.join(args.output_dir, "*/output/output.gd")
     log_search = os.path.join(args.log_dir,"*.log.txt")
 
-    print >> sys.stderr, "GenomeDiff search:", test_search
+    print >> sys.stderr, "GenomeDiff search:", output_search
     print >> sys.stderr, "Log search:", log_search
 
-    test_paths = glob.glob(test_search)
-    test_paths = (path.replace("/output/output.gd", "") for path in test_paths)
-    test_paths = map(os.path.basename, test_paths)
-    test_names = set(test_paths)
+    output_paths = glob.glob(output_search)
+    assert output_paths, "No output/output.gd's found for search:", output_search
+
+    output_paths = (path.replace("/output/output.gd", "") for path in output_paths)
+    output_paths = map(os.path.basename, output_paths)
+    output_names = set(output_paths)
     
     log_paths = glob.glob(log_search)
+    assert log_paths, "No *.log.txt's found for search:", log_search
     log_paths = map(os.path.basename, log_paths)
     log_paths = (path.replace(".log.txt", "") for path in log_paths)
     log_names = set(log_paths)
 
-    error_names = log_names.difference(test_names)
+    error_names = log_names.difference(output_names)
 
     if not len(error_names):
         print >> sys.stderr, "No errors!"
@@ -39,6 +43,9 @@ def do_errors(args):
         print
 
     return -1
+
+
+
     
 
 
@@ -47,7 +54,7 @@ def main():
     subparser    = main_parser.add_subparsers()
 
     error_parser = subparser.add_parser("errors")
-    error_parser.add_argument("-t", dest = "test_dir", default = "03_Output") 
+    error_parser.add_argument("-o", dest = "output_dir", default = "03_Output") 
     error_parser.add_argument("-l", dest = "log_dir", default = "04_Logs")
     error_parser.set_defaults(func = do_errors)
 
